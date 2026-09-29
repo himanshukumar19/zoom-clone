@@ -7,6 +7,7 @@ import { parseMeetingInput } from "@/lib/parseMeetingInput";
 import { getMeeting } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Wordmark } from "@/components/Wordmark";
 
 export default function JoinPage() {
   const router = useRouter();
@@ -53,36 +54,56 @@ export default function JoinPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#1C1C1E] text-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-black tracking-tight mb-2">Join a meeting</h1>
-        <p className="text-sm text-muted mb-8">Enter a Meeting ID or invite link.</p>
+    <div className="min-h-screen bg-white text-ink">
+      {/* Top bar consistent with shared layout (spec §8.2 / D19) */}
+      <header className="flex h-16 items-center justify-between border-b border-line bg-white px-6">
+        <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
+          <Wordmark />
+        </a>
+        <nav className="flex items-center gap-6 text-sm font-medium text-ink">
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
+          <a href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</a>
+          <a href="/join" className="text-zoom-blue">Join</a>
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Host</a>
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Web App</a>
+        </nav>
+      </header>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-          <Input
-            id="join-input"
-            label="Meeting ID or invite link"
-            placeholder="e.g. 123 456 7890"
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              if (error) setError(null);
-            }}
-            error={error || undefined}
-            autoComplete="off"
-            autoFocus
-          />
-          <Button
-            type="submit"
-            disabled={!canSubmit}
-            className="w-full"
-            aria-label="Join meeting"
-          >
-            <span>Join</span>
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </form>
-      </div>
-    </main>
+      <main className="flex flex-col items-center px-6 pt-28 pb-12">
+        <div className="w-full max-w-sm">
+          <h1 className="text-3xl font-black tracking-tight text-ink text-center mb-2">Join Meeting</h1>
+          <p className="text-sm text-muted text-center mb-8">Enter a Meeting ID or invite link.</p>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+            <Input
+              id="join-input"
+              label="Meeting ID or Invite Link"
+              placeholder="Enter Meeting ID or Invite Link"
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                if (error) setError(null);
+              }}
+              error={error || undefined}
+              autoComplete="off"
+              autoFocus
+            />
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className="w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+              aria-label="Join meeting"
+            >
+              <span>Join</span>
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </form>
+        </div>
+      </main>
+
+      <footer className="border-t border-line bg-app py-4 text-center text-xs text-muted">
+        © 2026 zoom-clone (assignment project). All rights reserved.
+      </footer>
+    </div>
   );
 }

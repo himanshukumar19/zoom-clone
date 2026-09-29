@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Clock as ClockIcon, CalendarDays, Copy, Play, Check } from "lucide-react";
+import { Clock as ClockIcon, Copy, Play, Check } from "lucide-react";
 import { listMeetings, startMeeting } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import type { Meeting, MeetingListFilter } from "@/types";
@@ -30,9 +30,11 @@ function formatDuration(mins: number | null): string {
 function EmptyIllustration({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-app border border-line">
-        <CalendarDays className="h-7 w-7 text-muted/50" />
-      </div>
+      <img
+        src="/empty-meetings.png"
+        alt="No meetings"
+        className="h-16 w-auto object-contain opacity-90"
+      />
       <p className="text-sm font-medium">{label}</p>
     </div>
   );

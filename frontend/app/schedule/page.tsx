@@ -149,8 +149,8 @@ export default function SchedulePage() {
         : `${meeting.duration_minutes} min`;
 
     return (
-      <div className="min-h-screen bg-app">
-        <div className="mx-auto max-w-3xl px-6 py-8">
+      <div className="min-h-screen bg-app flex flex-col">
+        <div className="mx-auto max-w-3xl px-6 py-8 flex-1">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-6">
             <ArrowLeft className="h-4 w-4" />
             Back to Meetings
@@ -207,13 +207,16 @@ export default function SchedulePage() {
             </Link>
           </div>
         </div>
+        <footer className="border-t border-line bg-app py-3 text-center text-xs text-muted">
+          © 2026 zoom-clone (assignment project). All rights reserved.
+        </footer>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-app">
-      <div className="mx-auto max-w-4xl px-4 py-6 flex gap-8">
+    <div className="min-h-screen bg-app flex flex-col">
+      <div className="mx-auto max-w-4xl px-4 py-6 flex gap-8 flex-1">
         <PortalSidebar />
 
         <main className="flex-1 min-w-0">
@@ -408,6 +411,9 @@ export default function SchedulePage() {
           </form>
         </main>
       </div>
+      <footer className="border-t border-line bg-app py-3 text-center text-xs text-muted">
+        © 2026 zoom-clone (assignment project). All rights reserved.
+      </footer>
     </div>
   );
 }

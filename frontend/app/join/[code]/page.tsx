@@ -7,6 +7,7 @@ import { getMeeting, joinMeeting } from "@/lib/api";
 import { loadParticipantId, saveParticipantId } from "@/lib/session";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Wordmark } from "@/components/Wordmark";
 import type { Meeting } from "@/types";
 
 export default function JoinNamePage() {
@@ -95,60 +96,83 @@ export default function JoinNamePage() {
 
   if (loadingMeeting) {
     return (
-      <main className="min-h-screen bg-[#1C1C1E] text-white flex items-center justify-center px-6">
-        <div className="w-full max-w-md text-center">
+      <div className="min-h-screen bg-white text-ink flex items-center justify-center px-6">
+        <header className="absolute top-0 left-0 right-0 flex h-16 items-center justify-between border-b border-line bg-white px-6">
+          <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md"><Wordmark /></a>
+        </header>
+        <div className="w-full max-w-sm text-center">
           <p className="text-sm text-muted">Loading meeting…</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#1C1C1E] text-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-black tracking-tight mb-2">Join a meeting</h1>
+    <div className="relative min-h-screen bg-white text-ink flex flex-col">
+      <header className="flex h-16 items-center justify-between border-b border-line bg-white px-6">
+        <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
+          <Wordmark />
+        </a>
+        <nav className="flex items-center gap-6 text-sm font-medium text-ink">
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
+          <a href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</a>
+          <a href="/join" className="text-zoom-blue">Join</a>
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Host</a>
+          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Web App</a>
+        </nav>
+      </header>
 
-        {meetingError && (
-          <div className="mb-6 rounded-xl bg-red-900/20 border border-red-900/30 px-4 py-3">
-            <p className="text-sm text-red-300 font-medium">{meetingError}</p>
-          </div>
-        )}
+      <main className="flex flex-1 flex-col items-center px-6 pt-28 pb-12">
+        <div className="w-full max-w-sm">
+          <h1 className="text-3xl font-black tracking-tight text-ink text-center mb-2">Join Meeting</h1>
 
-        {!meetingError && meeting && (
-          <>
-            <p className="text-sm text-muted mb-8">Meeting: <span className="font-bold text-white">{meeting.title}</span></p>
+          {meetingError && (
+            <div className="mb-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3">
+              <p className="text-sm text-danger font-medium">{meetingError}</p>
+            </div>
+          )}
 
-            <form onSubmit={handleJoin} className="flex flex-col gap-4" noValidate>
-              <Input
-                id="display-name"
-                label="Your name"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (nameError) setNameError(null);
-                }}
-                error={nameError || undefined}
-                maxLength={50}
-                autoFocus
-              />
-              <Button
-                type="submit"
-                disabled={!canJoin}
-                className="w-full"
-                aria-label="Join meeting"
-              >
-                <span>Join</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </form>
-          </>
-        )}
+          {!meetingError && meeting && (
+            <>
+              <p className="text-sm text-muted text-center mb-8">
+                Meeting: <span className="font-bold text-ink">{meeting.title}</span>
+              </p>
+              <form onSubmit={handleJoin} className="flex flex-col gap-4" noValidate>
+                <Input
+                  id="display-name"
+                  label="Your Name"
+                  placeholder="Enter your name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameError) setNameError(null);
+                  }}
+                  error={nameError || undefined}
+                  maxLength={50}
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  disabled={!canJoin}
+                  className="w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+                  aria-label="Join meeting"
+                >
+                  <span>Join</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </form>
+            </>
+          )}
 
-        {!meetingError && !meeting && (
-          <p className="text-sm text-muted">Meeting not available.</p>
-        )}
-      </div>
-    </main>
+          {!meetingError && !meeting && (
+            <p className="text-sm text-muted text-center">Meeting not available.</p>
+          )}
+        </div>
+      </main>
+
+      <footer className="border-t border-line bg-app py-4 text-center text-xs text-muted">
+        © 2026 zoom-clone (assignment project). All rights reserved.
+      </footer>
+    </div>
   );
 }
