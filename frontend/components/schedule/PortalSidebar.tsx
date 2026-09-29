@@ -5,7 +5,7 @@ import { Home, CalendarDays } from "lucide-react";
 
 export function PortalSidebar() {
   return (
-    <aside className="w-60 shrink-0 bg-sidebar rounded-xl border border-line p-3">
+    <aside className="hidden md:block w-60 shrink-0 bg-sidebar rounded-xl border border-line p-3">
       <nav className="flex flex-col gap-1">
         <Link
           href="/"

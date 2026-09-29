@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col font-sans">
         <ToastProvider>
           <LayoutShell />
-          <div className="pt-16 pl-14">{children}</div>
+          <div className="pt-16 pl-4 md:pl-14">{children}</div>
         </ToastProvider>
       </body>
     </html>

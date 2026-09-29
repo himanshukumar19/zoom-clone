@@ -216,7 +216,7 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-app flex flex-col">
-      <div className="mx-auto max-w-4xl px-4 py-6 flex gap-8 flex-1">
+      <div className="mx-auto max-w-4xl px-4 py-6 flex flex-col md:flex-row gap-8 flex-1">
         <PortalSidebar />
 
         <main className="flex-1 min-w-0">

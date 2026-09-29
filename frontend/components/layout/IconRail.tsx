@@ -18,7 +18,7 @@ export function IconRail() {
   const SettingsIcon = navItems[2].icon;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 flex w-14 flex-col items-center justify-between border-r bg-sidebar p-4 pt-6 space-y-12">
+    <aside className="hidden md:flex fixed inset-y-0 left-0 z-50 w-14 flex-col items-center justify-between border-r bg-sidebar p-4 pt-6 space-y-12">
       {/* Top: Home */}
       <Link
         href={navItems[0].href}

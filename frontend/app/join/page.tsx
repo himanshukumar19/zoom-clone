@@ -61,7 +61,7 @@ export default function JoinPage() {
         <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
           <Wordmark />
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-ink">
+        <nav className="flex items-center gap-3 sm:gap-6 text-sm font-medium text-ink flex-wrap">
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
           <Link href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</Link>
           <Link href="/join" className="text-zoom-blue">Join</Link>
