@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Clock, CalendarDays, Copy, Play, Check } from "lucide-react";
+import { Clock as ClockIcon, CalendarDays, Copy, Play, Check } from "lucide-react";
 import { listMeetings, startMeeting } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import type { Meeting, MeetingListFilter } from "@/types";
@@ -90,10 +90,7 @@ export function MeetingsCard() {
     }
   };
 
-  const upcomingMeetings = meetings;
-  const recentMeetings = meetings;
-
-  const activeMeetings = tab === "upcoming" ? upcomingMeetings : recentMeetings;
+  const activeMeetings = meetings;
 
   return (
     <section className="w-full rounded-2xl border bg-white shadow-sm">
@@ -151,7 +148,7 @@ export function MeetingsCard() {
                   {/* Left info */}
                   <div className="flex items-start gap-4 min-w-0">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-app border border-line text-zoom-blue">
-                      <Clock className="h-5 w-5" />
+                      <ClockIcon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
