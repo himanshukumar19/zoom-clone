@@ -74,6 +74,7 @@ export function ActionTiles() {
         variant="join"
         aria-label="Join a meeting"
         icon={<Plus className="h-8 w-8" strokeWidth={2} />}
+        onClick={() => router.push("/join")}
       />
       <ActionTile
         label="Schedule"
