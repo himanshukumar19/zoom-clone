@@ -1,9 +1,20 @@
 # zoom-clone — Video Conferencing Platform (Zoom Clone)
 
-> **Status: in progress — 10 of 27 tickets done (T-001…T-010).** Backend complete (all endpoints + tests, `pytest tests/` green) with models + auto-seed on empty DB; frontend scaffold + API seam done (tested: `vitest run` green), all pages/flows still to come.
-> Sections below are marked **[done]** or **[planned]** so you can tell what actually works. Deployed links TBD (T-024).
+> All core flows built and deployed (T-001…T-027 complete). Backend tests green (`pytest tests/`); frontend tests green (`vitest run`); all pages rendered as a SPA-style App Router site.
+>
+> **No auth:** default Demo User (id=1) always logged in (no login/signup/token routes). No real audio/video — room shows initials tiles.
 
-Functional Zoom web-app clone: create, join, and schedule meetings with a clean Zoom-like interface. Built as a Scaler SDE Fullstack assignment (1-day timeline).
+Functional Zoom web-app clone: create, join, and schedule meetings with a clean Zoom-like interface. Built as a Scaler SDE Fullstack assignment.
+
+## Live demo
+- App (frontend, Vercel): https://zoom-clone-one-pink.vercel.app
+- API (backend, Render): https://zoom-clone-sl7i.onrender.com  (docs at /docs)
+- Note: the backend is on Render's free tier. It sleeps when idle, so the first
+  request can take 30-60 seconds. The SQLite database resets on restart and is
+  re-seeded with demo data.
+
+## Repository
+https://github.com/himanshukumar19/zoom-clone
 
 ## Tech stack
 
@@ -12,41 +23,24 @@ Functional Zoom web-app clone: create, join, and schedule meetings with a clean 
 | Frontend | Next.js App Router + TypeScript + Tailwind CSS (SPA-style, all pages client-rendered), Lato, lucide-react |
 | Backend | Python FastAPI + SQLAlchemy 2.x + Pydantic v2 |
 | Database | SQLite (own schema, auto-seeded on empty DB) |
+| Runtime | Python 3.13.7 (3.11+ works if tested) |
 | Hosting | Vercel (frontend) + Render (backend) |
 
 ## Features
 
-Status per feature — backend complete through T-008; frontend scaffold + API seam done (T-009, T-010); pages/flows still to come.
+All core flows complete (T-001…T-010 backend; T-009/T-010 frontend scaffold + API seam; T-011–T-027 pages and flows). Bonus responsive design included where practical.
 
 | Feature | Status |
 |---|---|
-| Dashboard (clock, New / Join / Schedule tiles, Upcoming + Recent tabs) | planned (T-011…T-013) |
-| Instant Meeting (live room, 10-digit Meeting ID, Invite Link) | backend **[done]** (T-003); flow UI planned (T-014) |
-| Join Meeting (by ID or link + Display Name, not-found/ended errors) | backend **[done]** (T-005); flow UI planned (T-015) |
-| Schedule Meeting (topic, description, date/time, duration → Upcoming) | backend **[done]** (T-004); page UI planned (T-016) |
-| Meeting Room (initials tiles, roster polling, self-mute, invite, leave) | backend **[done]** (T-006); room UI planned (T-017…T-019) |
-| Host mute-all / remove participant (bonus) | backend **[done]** (T-007); room UI planned (T-020) |
-| Responsive mobile/tablet/desktop (bonus) | planned (T-022) |
+| Dashboard (clock, New / Join / Schedule tiles, Upcoming + Recent tabs) | complete |
+| Instant Meeting (live room, 10-digit Meeting ID, Invite Link) | complete |
+| Join Meeting (by ID or link + Display Name, not-found/ended errors) | complete |
+| Schedule Meeting (topic, description, date/time, duration → Upcoming) | complete |
+| Meeting Room (initials tiles, roster polling, self-mute, invite, leave) | complete |
+| Host mute-all / remove participant (bonus) | complete |
+| Responsive mobile/tablet/desktop (bonus) | included |
 
-**[done] T-001 — backend scaffold:** env-driven settings, SQLAlchemy engine/session with `PRAGMA foreign_keys=ON`, CORS from `CORS_ORIGINS`, `GET /api/health`.
-
-**[done] T-002 — models + seed:** `users` / `meetings` / `participants` with CHECK constraints (type/status/duration), unique indexed meeting code, cascade delete to participants; startup `create_all` + seed (Demo User, 3 upcoming + 4 ended meetings, dates relative to now) that runs only when the users table is empty.
-
-**[done] T-003 — instant meeting:** `POST /api/meetings/instant` creates a `live` meeting titled `"Demo User's Meeting"` plus a host participant; 10-digit code (first non-zero, unique with retry), spaced display form, Invite Link computed from `FRONTEND_URL` (never stored). Covered by `backend/tests/test_instant_meeting.py` (5 tests).
-
-**[done] T-004 — schedule + list:** `POST /api/meetings` validates title ≤200 (trimmed, non-empty), description ≤2000, future `scheduled_start`, `duration_minutes` > 0 → 201 `{meeting}` or 422 with `detail`; `GET /api/meetings?filter=upcoming|recent` implements D13 (Upcoming = not ended and not past scheduled end; Recent = ended or past end; missed unstarted meetings count as Recent), newest-first by `created_at`.
-
-**[done] T-005 — get/start/join:** `GET /meetings/{code}` validates existence (404 unknown, spaced codes accepted); `POST /meetings/{code}/start` flips scheduled → live (410 on ended); `POST /meetings/{code}/join` trims/limits display name (422), returns 410 on ended, blocks removed-session rejoin, and first join flips scheduled → live (D8/Q3).
-
-**[done] T-006 — leave/participants/mute:** `POST /meetings/{code}/leave` (last active leave ends the meeting), `GET /meetings/{code}/participants` (active only), `PATCH .../participants/me` (own mute toggle); caller identity via `X-Participant-Id`, 400 when missing.
-
-**[done] T-007 — host controls:** `POST /meetings/{code}/mute-all` and `DELETE .../participants/{id}` enforce host-only (403 otherwise); host/self cannot be removed.
-
-**[done] T-008 — backend tests:** `backend/tests/` covers code format/uniqueness, join/start lifecycle rules, upcoming/recent filters, leave auto-end, and host-only 403s (`pytest tests/` green).
-
-**[done] T-009 — frontend scaffold:** Next.js App Router + TypeScript + Tailwind, Lato via `next/font`, Zoom design tokens (`app/globals.css`), base UI components (`components/ui/`: Button, Input, Select, Modal, Toast), text/SVG wordmark — no copied assets.
-
-**[done] T-010 — frontend API seam:** typed client (`lib/api.ts`, `ApiError` with status for 404/410/422/403), `sessionStorage` participant identity keyed by code (`lib/session.ts`), pure `parseMeetingInput` (spaced/raw/link → code), shared types (`types/`). Tested: `npm run test` (`vitest run`, 12 tests) green, `npm run typecheck` clean.
+Built features (T-001…T-027): backend scaffold, env settings, SQLAlchemy engine/session with `PRAGMA foreign_keys=ON`, CORS from `CORS_ORIGINS`, health route; models + seed (Demo User, 3 upcoming + 4 ended meetings, dates relative to now, only when users empty); meeting code util (10-digit unique, spaced display); instant/schedule/end/get/start/join endpoints with lifecycle rules; leave with auto-end, participants list, self mute, identity header (`X-Participant-Id`); host-only mute-all and remove; full frontend App Router pages (dashboard, instant, join, schedule, meeting room, chat/contacts/settings placeholders, style guide).
 
 ## Repo layout
 
@@ -61,28 +55,29 @@ zoom-clone/
 │   ├── specs/                  # 6 feature specs (00–05)
 │   ├── tickets/                # T-001…T-027 implementation tickets
 │   └── reference/              # Zoom UI screenshots (build reference)
-├── backend/                    # FastAPI app  [exists]
+├── backend/                    # FastAPI app — complete (models, seed, routers, tests)
 │   ├── app/
-│   │   ├── main.py             # app, CORS, startup hook
+│   │   ├── main.py             # app, CORS, startup hook (`/api/me`, `/api/health`)
 │   │   ├── config.py           # env settings
 │   │   ├── database.py         # engine, session, FK pragma
-│   │   ├── models/             # [done — T-002] user.py, meeting.py, participant.py
-│   │   ├── schemas/ routers/ services/   # [done — T-003/T-004] instant, schedule, list
-│   │   ├── utils/              # [done — T-003] meeting_code.py (generate/format/invite link)
-│   │   └── seed.py             # [done — T-002] relative seed, runs when users empty
+│   │   ├── models/             # user.py, meeting.py, participant.py
+│   │   ├── schemas/ routers/ services/ utils/  # all routes + logic
+│   │   └── seed.py             # relative seed on empty DB
 │   ├── requirements.txt
 │   └── .env.example
-├── frontend/                   # Next.js app  [scaffold + API seam done — T-009/T-010]
-│   ├── app/                      # layout (Lato, Toast), dashboard placeholder, style-guide
-│   ├── components/ui/            # [done — T-009] Button, Input, Select, Modal, Toast
-│   ├── components/Wordmark.tsx   # [done — T-009] own text/SVG wordmark
-│   ├── lib/                      # [done — T-010] api.ts, session.ts, parseMeetingInput.ts (+ tests)
-│   └── types/                    # [done — T-010] Meeting/Participant/User types
+├── frontend/                   # Next.js App Router — complete (all flows + placeholders)
+│   ├── app/                    # layout, dashboard, meeting, join, schedule, chat/contacts/settings placeholders
+│   ├── components/ui/          # Button, Input, Select, Modal, Toast
+│   ├── components/Wordmark.tsx # own text/SVG wordmark
+│   ├── lib/                    # api.ts, session.ts, parseMeetingInput.ts (+ tests)
+│   └── types/                  # Meeting / Participant / User
 ```
 
 ## Setup
 
-Backend **[done]** — verified on a clean Python 3.11+ venv (see `.python-version`):
+Requires Python 3.11+ (project runs on 3.13.7; 3.11+ works if dependencies install).
+
+Backend — clean clone:
 
 ```bash
 cd backend
@@ -93,30 +88,30 @@ uvicorn app.main:app --reload
 curl http://localhost:8000/api/health   # {"status":"ok"}
 ```
 
-Startup runs `create_all` then seeds demo data when the users table is empty (Demo User + 3 upcoming / 4 ended meetings with dates relative to now). Reboots with data do not re-seed.
+Startup runs `create_all` then seeds (Demo User + 3 upcoming / 4 ended meetings, dates relative to now) only when users table is empty. Reboots with data do not re-seed.
 
-Frontend **[done — scaffold + API seam]**:
+Frontend — clean clone:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local   # set NEXT_PUBLIC_API_URL to the backend URL
-npm run dev                  # pages/flows land in T-011+
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL to backend URL
+npm run dev                  # SPA-style App Router pages
 npm run test                 # vitest (parser, session, API-error tests)
 npm run typecheck            # tsc --noEmit
 ```
 
 ## Environment variables
 
-Backend (`.env.example`) **[done]**: `DATABASE_URL`, `FRONTEND_URL`, `CORS_ORIGINS`.
-Frontend (`.env.example`) **[done]**: `NEXT_PUBLIC_API_URL`.
-Never hardcode `localhost`; never commit `.env` or `.db` files.
+Backend (`backend/.env.example`): `DATABASE_URL`, `FRONTEND_URL`, `CORS_ORIGINS`. `FRONTEND_URL` and `CORS_ORIGINS` must match the deployed Vercel domain (`https://...`, no trailing slash) so invite links work. `DATABASE_URL` uses SQLite file (`sqlite:///./zoom_clone.db`).
+
+Frontend (`frontend/.env.example`): `NEXT_PUBLIC_API_URL` pointing at the backend (Render / local).
+
+Never hardcode `localhost`; never commit `.env`, `.db`, or `.env.local` files.
 
 ## API
 
 Base path `/api`, errors as `{ "detail": "..." }` (see `docs/specs/00-backend-foundation.md`).
-
-**[done]**
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -130,15 +125,14 @@ Base path `/api`, errors as `{ "detail": "..." }` (see `docs/specs/00-backend-fo
 | POST | `/api/meetings/{code}/leave` | Leave; last active leave ends meeting → 200 `{ok: true}` (T-006) |
 | GET | `/api/meetings/{code}/participants` | Active participants (roster poll) → 200 `[Participant]` (T-006) |
 | PATCH | `/api/meetings/{code}/participants/me` | Toggle own mute → 200 `Participant` (T-006) |
+| POST | `/api/meetings/{code}/end` | Host ends meeting for all → 200 `{ok: true}` or 403/410 |
 | POST | `/api/meetings/{code}/mute-all` | Host-only: mute all non-host → 200 `{ok: true}` or 403 (T-007) |
 | DELETE | `/api/meetings/{code}/participants/{id}` | Host-only: remove participant → 200 `{ok: true}` or 403/404 (T-007) |
-
-**[planned]** — will add when T-011 implements it:
-`GET /api/me` → 200 `{id, name, email}` for the navbar avatar placeholder.
+| GET | `/api/me` | Default user for navbar avatar (`id=1`, Demo User) |
 
 ## ER diagram
 
-**[done — T-002]** `users` 1—N `meetings` (host); `meetings` 1—N `participants`; `users` 1—N `participants` (optional, host only). Active participant = `left_at IS NULL AND is_removed = false`.
+`users` 1—N `meetings` (host); `meetings` 1—N `participants`; `users` 1—N `participants` (optional, host only). Active participant = `left_at IS NULL AND is_removed = false`.
 
 ```mermaid
 erDiagram
@@ -179,42 +173,20 @@ erDiagram
     }
 ```
 
-## API (core)
+See full endpoint table above (`/api/health`, instant, schedule, list, get/start/join/leave/end, participants, mute-self, mute-all, remove) — all implemented with lifecycle rules (D8/Q3) and host-only 403 enforcement.
 
-- `GET /api/me` — default user
-- `POST /api/meetings/instant` — create instant
-- `POST /api/meetings` — schedule
-- `GET /api/meetings?filter=upcoming|recent`
-- `GET /api/meetings/{code}`
-- `POST /api/meetings/{code}/start`
-- `POST /api/meetings/{code}/join`
-- `POST /api/meetings/{code}/leave`
-- `POST /api/meetings/{code}/end` — host only
-- `GET /api/meetings/{code}/participants`
-- `PATCH /api/meetings/{code}/participants/me`
-- `POST /api/meetings/{code}/mute-all` — host only
-- `DELETE /api/meetings/{code}/participants/{id}` — host only
+## Assumptions (locked in grill / spec)
 
-## Database (ER diagram)
-
-```mermaid
-erDiagram
-    users ||--o{ meetings : hosts
-    users ||--o{ participants : joins
-    meetings ||--o{ participants : contains
-```
-
-## Assumptions (locked in grill)
-
-- **No auth**: one seeded Default User (id=1, Demo User) is always "logged in". No login/signup/passwords/tokens/routes.
-- **No real audio/video**: room shows initials tiles; mute is a state flag; roster refreshes by 5s polling, no WebSockets.
-- **Room identity is not security**: frontend `sessionStorage` participant id sent as `X-Participant-Id`, used only for host-only checks (403 otherwise). Anyone can forge it — it is a business-rule input, not a credential.
-- **Empty-state illustration**: uses user-supplied PNG (`frontend/public/empty-meetings.png`), not an SVG — deliberate deviation.
-- **Placeholder pages**: `/chat`, `/contacts`, `/settings`, `/meetings` are static placeholder pages for visual similarity (no backend/DB work).
-- Guests may join scheduled meetings before host Start (first join flips to live); join on ended → 410.
-- SQLite on the host is ephemeral — seed re-runs on restart.
-- Times stored in UTC, displayed in browser-local zone.
-- Original work only: own text/SVG wordmark, no copied Zoom assets.
+- **No auth**: one seeded Default User (id=1, name Demo User, email demo@example.com) is always "logged in". No login/signup/passwords/JWT/OAuth/protected routes (`GET /api/me` supplies navbar avatar only).
+- **No real audio/video**: meeting room shows initials tiles; mute is a state flag (`is_muted`, toggled by self or host mute-all); roster refreshes by 5s polling (`GET .../participants`), no WebSockets or WebRTC.
+- **Room identity is not security**: `sessionStorage` `participant_id` sent as `X-Participant-Id` header, used only for host-only checks (403 if not host). Anyone can forge it — business-rule input, not a credential.
+- **Lifecycle / end rules**: meeting ends when host calls `POST .../end`; or when last active participant leaves (`POST .../leave`) plus a lazy expiry check; join on ended → 410.
+- **Seed data**: random 10-digit codes (first digit non-zero, unique with retry), stored raw, displayed spaced; 3 upcoming + 4 ended meetings with dates relative to now; runs only when `users` table is empty.
+- **Time**: stored UTC (`DateTime(timezone=True)`), serialized with `Z`, displayed in browser local zone.
+- **Empty-state illustration**: `frontend/public/empty-meetings.png` (PNG, not SVG) — deliberate deviation.
+- **Placeholder pages**: `/chat`, `/contacts`, `/settings`, `/meetings` are static placeholder pages for visual similarity; no backend/DB/work.
+- **SQLite**: file-based (`zoom_clone.db`), `PRAGMA foreign_keys=ON`; ephemeral on Render (resets on restart/redeploy and is re-seeded with demo data).
+- **Original work only**: own text/SVG wordmark (`components/Wordmark.tsx`); no copied Zoom logos/assets/code.
 
 ## Docs
 
@@ -237,6 +209,8 @@ erDiagram
 | T-009 | Next.js + Tailwind scaffold, tokens, Lato, base UI components | done (`af2f74c`) |
 | T-010 | Typed API client, session helper, meeting-input parser, types | done (`07e2b2a`) |
 
-## Deployment (TBD — T-024)
+## Deployment
 
-- Frontend URL: TBD · Backend URL: TBD · Repo URL: https://github.com/himanshukumar19/zoom-clone
+- **Backend (Render)**: root directory `backend/`; build `pip install -r requirements.txt`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; env vars: `DATABASE_URL` (SQLite file), `FRONTEND_URL`, `CORS_ORIGINS` (must equal deployed Vercel domain, https, no trailing slash), `PYTHON_VERSION` (3.13.7). `FRONTEND_URL` builds invite links (`https://zoom-clone-one-pink.vercel.app/join/{code}`).
+- **Frontend (Vercel)**: root directory `frontend/`; env var `NEXT_PUBLIC_API_URL` points at the Render URL (`https://zoom-clone-sl7i.onrender.com`). No build-time backend fetches.
+- Note: Render free tier sleeps when idle; first request may take 30–60 seconds. SQLite resets on restart and is re-seeded with demo data.
