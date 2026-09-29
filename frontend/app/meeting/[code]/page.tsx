@@ -36,6 +36,7 @@ export default function RoomPage() {
   const [elapsed, setElapsed] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const leftRef = useRef(false);
 
   const fetchMeeting = useCallback(async () => {
     try {
@@ -80,7 +81,9 @@ export default function RoomPage() {
     };
   }, [meeting?.id]);
 
-  // Poll participants every 5 seconds.
+  const participantId = loadParticipantId(codeNormalized);
+
+  // Poll participants every 5 seconds; detect removed self and stop on unmount.
   useEffect(() => {
     if (!meeting || !codeNormalized) return;
     fetchParticipants();
@@ -88,7 +91,18 @@ export default function RoomPage() {
     return () => clearInterval(interval);
   }, [meeting, codeNormalized, fetchParticipants]);
 
-  const participantId = loadParticipantId(codeNormalized);
+  // Ejection check: if self is no longer in active roster, redirect to dashboard.
+  useEffect(() => {
+    if (leftRef.current) return;
+    if (!codeNormalized || participantId == null || participants.length === 0) return;
+    const stillPresent = participants.some((p) => p.id === participantId);
+    if (!stillPresent) {
+      clearParticipantId(codeNormalized);
+      pushToast("info", "You were removed from the meeting.");
+      router.push("/");
+    }
+  }, [participants, codeNormalized, participantId, router, pushToast]);
+
   const self = participants.find((p) => p.id === participantId);
   const selfMuted = self ? self.is_muted : false;
 
@@ -105,6 +119,7 @@ export default function RoomPage() {
 
   const handleLeave = useCallback(async () => {
     if (participantId == null) return;
+    leftRef.current = true;
     try {
       await leaveMeeting(codeNormalized, participantId);
       clearParticipantId(codeNormalized);
@@ -196,11 +211,13 @@ export default function RoomPage() {
         onLeave={handleLeave}
       />
 
-      {/* Simple participants panel (T-018 minimal: count + self/host labels; T-019 builds full panel) */}
+      {/* Side participants panel (T-019: count, Host/Me labels, muted icons; sheet on mobile) */}
       {panelOpen && (
-        <aside className="fixed bottom-16 left-0 right-0 z-40 mx-auto max-w-md rounded-t-2xl border-t border-white/10 bg-[#232326]/95 p-4 shadow-2xl backdrop-blur-md sm:bottom-16 sm:max-w-lg md:bottom-auto md:right-4 md:top-24 md:max-w-sm md:rounded-2xl md:border md:border-white/10">
+        <aside className="fixed bottom-16 left-0 right-0 z-40 mx-auto max-w-md rounded-t-2xl border-t border-white/10 bg-[#232326]/95 p-4 shadow-2xl backdrop-blur-md sm:bottom-16 sm:max-w-lg md:bottom-auto md:right-4 md:top-24 md:max-w-xs md:rounded-2xl md:border md:border-white/10">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#A0A0A8]">Participants</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#A0A0A8]">
+              Participants <span className="text-white">({participants.length})</span>
+            </h3>
             <button
               onClick={() => setPanelOpen(false)}
               aria-label="Close panel"
@@ -221,8 +238,7 @@ export default function RoomPage() {
                     {p.role === "host" && <span className="rounded-full bg-zoom-blue px-1.5 py-0.5 text-[10px] font-extrabold text-white">Host</span>}
                   </div>
                   <div className="text-xs text-[#A0A0A8]">
-                    {p.id === participantId ? "You" : ""}
-                    {p.is_muted ? (p.id === participantId ? " · Muted" : " · Muted") : ""}
+                    {[p.id === participantId ? "Me" : "", p.is_muted ? "· Muted" : ""].filter(Boolean).join(" ")}
                   </div>
                 </div>
                 {p.is_muted && (
