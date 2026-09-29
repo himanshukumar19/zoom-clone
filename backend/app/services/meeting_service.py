@@ -1,13 +1,14 @@
-"""Meeting rules: the Default User's instant Meetings today (T-003).
+"""Meeting rules: instant, schedule, list, start, join (T-003..T-005).
 
 Lifecycle lives here, not in the routers: instant starts `live`, the first
 join to a scheduled Meeting flips it `live` (T-005), the last participant to
 leave flips it `ended` (T-006).
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Meeting, Participant, User
@@ -15,6 +16,8 @@ from app.schemas.meeting import (
     MeetingOut,
     MeetingWithParticipantOut,
     ParticipantOut,
+    ScheduleMeetingIn,
+    ScheduleMeetingOut,
 )
 from app.utils.meeting_code import generate_meeting_code
 
@@ -82,3 +85,283 @@ def create_instant_meeting(db: Session) -> MeetingWithParticipantOut:
     )
     db.commit()
     return payload
+
+
+def _as_utc(value: datetime) -> datetime:
+    """SQLite returns naive datetimes; treat those as UTC for comparisons."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def scheduled_end(meeting: Meeting) -> datetime | None:
+    """Scheduled end instant, or None for instant meetings without a schedule."""
+    if meeting.scheduled_start is None or meeting.duration_minutes is None:
+        return None
+    return _as_utc(meeting.scheduled_start) + timedelta(
+        minutes=meeting.duration_minutes
+    )
+
+
+def is_recent(meeting: Meeting, now: datetime) -> bool:
+    """Recent = ended, or a scheduled meeting whose time has passed (D13)."""
+    if meeting.status == "ended":
+        return True
+    end = scheduled_end(meeting)
+    # Live meetings stay in Upcoming (with a Live badge) until they end,
+    # even if their scheduled slot passed while people are still inside.
+    if meeting.status == "live":
+        return False
+    return end is not None and end <= now
+
+
+def get_by_code(db: Session, code: str) -> Meeting:
+    """Fetch a meeting by raw code (digits only) or raise 404."""
+    raw = "".join(ch for ch in code if ch.isdigit())
+    meeting = db.scalar(select(Meeting).where(Meeting.meeting_code == raw))
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting ID not found.")
+    return meeting
+
+
+def schedule_meeting(
+    db: Session,
+    title: str,
+    description: str | None,
+    scheduled_start: datetime,
+    duration_minutes: int,
+) -> MeetingOut:
+    """Create a scheduled meeting for the Default User (T-004)."""
+    host = get_default_user(db)
+    now = _utcnow()
+    start = _as_utc(scheduled_start)
+    if start <= now:
+        raise HTTPException(
+            status_code=422, detail="Scheduled start must be in the future."
+        )
+    if duration_minutes <= 0:
+        raise HTTPException(
+            status_code=422, detail="Duration must be greater than 0."
+        )
+    meeting = Meeting(
+        meeting_code=generate_meeting_code(db),
+        title=title.strip(),
+        description=description,
+        host_id=host.id,
+        type="scheduled",
+        status="scheduled",
+        scheduled_start=scheduled_start,
+        duration_minutes=duration_minutes,
+        started_at=None,
+        ended_at=None,
+        created_at=now,
+    )
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+    return MeetingOut.from_meeting(meeting)
+
+
+def list_meetings(db: Session, meeting_filter: str) -> list[MeetingOut]:
+    """Upcoming / recent lists for the dashboard (T-004, D13). Newest first."""
+    if meeting_filter not in ("upcoming", "recent"):
+        raise HTTPException(
+            status_code=422, detail="filter must be 'upcoming' or 'recent'."
+        )
+    now = _utcnow()
+    meetings = db.scalars(select(Meeting).order_by(Meeting.id.desc())).all()
+    if meeting_filter == "upcoming":
+        picked = [m for m in meetings if not is_recent(m, now)]
+    else:
+        picked = [m for m in meetings if is_recent(m, now)]
+    return [MeetingOut.from_meeting(m) for m in picked]
+
+
+def start_meeting(db: Session) -> MeetingWithParticipantOut:
+    """Placeholder — real start needs the meeting row; see start_by_code."""
+    raise NotImplementedError
+
+
+def start_by_code(db: Session, code: str) -> MeetingWithParticipantOut:
+    """Host starts a scheduled meeting: status -> live + host participant."""
+    meeting = get_by_code(db, code)
+    if meeting.status == "ended":
+        raise HTTPException(status_code=410, detail="This meeting has ended.")
+    now = _utcnow()
+    if meeting.status == "scheduled":
+        meeting.status = "live"
+        meeting.started_at = now
+    host = get_default_user(db)
+    # Reuse the active host row if Start is pressed twice.
+    existing = db.scalar(
+        select(Participant).where(
+            Participant.meeting_id == meeting.id,
+            Participant.role == "host",
+            Participant.left_at.is_(None),
+            Participant.is_removed.is_(False),
+        )
+    )
+    if existing is None:
+        existing = Participant(
+            meeting_id=meeting.id,
+            user_id=host.id,
+            display_name=host.name,
+            role="host",
+            is_muted=False,
+            is_removed=False,
+            joined_at=now,
+            left_at=None,
+        )
+        db.add(existing)
+        db.flush()
+    payload = MeetingWithParticipantOut(
+        meeting=MeetingOut.from_meeting(meeting),
+        participant=ParticipantOut.from_participant(existing),
+    )
+    db.commit()
+    return payload
+
+
+def join_by_code(
+    db: Session, code: str, display_name: str, caller_id: int | None = None
+) -> MeetingWithParticipantOut:
+    """Guest join (T-005). First join to a scheduled meeting flips it live."""
+    meeting = get_by_code(db, code)
+    if meeting.status == "ended":
+        raise HTTPException(status_code=410, detail="This meeting has ended.")
+    name = display_name.strip()
+    if not name or len(name) > 50:
+        raise HTTPException(
+            status_code=422, detail="Display name must be 1-50 characters."
+        )
+    # A removed session cannot act again with the same identity (T-005).
+    if caller_id is not None:
+        caller = db.get(Participant, caller_id)
+        if (
+            caller is not None
+            and caller.meeting_id == meeting.id
+            and caller.is_removed
+        ):
+            raise HTTPException(
+                status_code=403, detail="You were removed from this meeting."
+            )
+    now = _utcnow()
+    if meeting.status == "scheduled":
+        meeting.status = "live"
+        meeting.started_at = now
+    participant = Participant(
+        meeting_id=meeting.id,
+        user_id=None,  # guests have no user row
+        display_name=name,
+        role="participant",
+        is_muted=False,
+        is_removed=False,
+        joined_at=now,
+        left_at=None,
+    )
+    db.add(participant)
+    db.flush()
+    payload = MeetingWithParticipantOut(
+        meeting=MeetingOut.from_meeting(meeting),
+        participant=ParticipantOut.from_participant(participant),
+    )
+    db.commit()
+    return payload
+
+
+def _as_aware_utc(value: datetime) -> datetime:
+    """SQLite returns naive datetimes; treat those as UTC for comparisons."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _scheduled_end(meeting: Meeting) -> datetime | None:
+    """Scheduled end = start + duration. None when the meeting has no schedule."""
+    if meeting.scheduled_start is None or meeting.duration_minutes is None:
+        return None
+    return _as_aware_utc(meeting.scheduled_start) + timedelta(
+        minutes=meeting.duration_minutes
+    )
+
+
+def _is_upcoming(meeting: Meeting, now: datetime) -> bool:
+    """D13: not ended AND not past its scheduled end (no end = upcoming)."""
+    if meeting.status == "ended":
+        return False
+    end = _scheduled_end(meeting)
+    return end is None or end > now
+
+
+def _is_recent(meeting: Meeting, now: datetime) -> bool:
+    """D13: ended, or a scheduled meeting whose end time has passed."""
+    if meeting.status == "ended":
+        return True
+    end = _scheduled_end(meeting)
+    return end is not None and end <= now
+
+
+def create_scheduled_meeting(
+    db: Session, payload: ScheduleMeetingIn
+) -> ScheduleMeetingOut:
+    """Schedule a future Meeting for the Default User (T-004).
+
+    Field lengths and positive duration are enforced by the schema (422);
+    the future-start rule lives here so the message names the problem.
+    """
+    host = get_default_user(db)
+    now = _utcnow()
+
+    start = _as_aware_utc(payload.scheduled_start)
+    if start <= now:
+        raise HTTPException(
+            status_code=422, detail="Scheduled start must be in the future."
+        )
+
+    # Schema strips the title; an all-whitespace description becomes None.
+    description = payload.description
+    if description is not None and not description.strip():
+        description = None
+
+    meeting = Meeting(
+        meeting_code=generate_meeting_code(db),
+        title=payload.title,
+        description=description,
+        host_id=host.id,
+        type="scheduled",
+        status="scheduled",
+        scheduled_start=start,
+        duration_minutes=payload.duration_minutes,
+        started_at=None,
+        ended_at=None,
+        created_at=now,
+    )
+    db.add(meeting)
+    db.flush()  # assigns meeting.id so the response can carry it
+
+    out = ScheduleMeetingOut(meeting=MeetingOut.from_meeting(meeting))
+    db.commit()
+    return out
+
+
+def list_meetings(
+    db: Session, meeting_filter: str = "upcoming"
+) -> list[MeetingOut]:
+    """Dashboard lists (T-004): Upcoming / Recent per D13, newest first.
+
+    Newest = most recently created. Filtering happens in Python (the dashboard
+    set is small) so naive-vs-aware SQLite datetimes are handled in one place.
+    """
+    if meeting_filter not in ("upcoming", "recent"):
+        raise HTTPException(
+            status_code=422, detail="Filter must be 'upcoming' or 'recent'."
+        )
+    now = _utcnow()
+    rows = db.scalars(
+        select(Meeting).order_by(Meeting.created_at.desc(), Meeting.id.desc())
+    ).all()
+    if meeting_filter == "upcoming":
+        kept = [m for m in rows if _is_upcoming(m, now)]
+    else:
+        kept = [m for m in rows if _is_recent(m, now)]
+    return [MeetingOut.from_meeting(m) for m in kept]

@@ -6,7 +6,7 @@ reformat a code or recompute an Invite Link by hand.
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.models import Meeting, Participant
 from app.schemas.common import UtcDateTime
@@ -77,3 +77,62 @@ class MeetingWithParticipantOut(BaseModel):
 
     meeting: MeetingOut
     participant: ParticipantOut
+
+
+class ScheduleMeetingIn(BaseModel):
+    """Schedule payload (T-004). Local wall time arrives as UTC ISO from frontend."""
+
+    title: str
+    description: Optional[str] = None
+    scheduled_start: UtcDateTime
+    duration_minutes: int
+
+    @field_validator("title")
+    @classmethod
+    def title_must_be_nonempty(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Title is required.")
+        if len(v) > 200:
+            raise ValueError("Title must be 200 characters or fewer.")
+        return v
+
+    @field_validator("description")
+    @classmethod
+    def description_max_length(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and len(v) > 2000:
+            raise ValueError("Description must be 2000 characters or fewer.")
+        return v
+
+    @field_validator("duration_minutes")
+    @classmethod
+    def duration_must_be_positive(cls, v: int) -> int:
+        # Backend only enforces > 0 (plan Q9); the 40-min default lives in the
+        # frontend. A zero/negative duration is a 422, never a DB error.
+        if v <= 0:
+            raise ValueError("Duration must be greater than 0 minutes.")
+        return v
+
+
+class ScheduleMeetingOut(BaseModel):
+    """Envelope for POST /api/meetings: the scheduled Meeting (with Invite Link)."""
+
+    meeting: MeetingOut
+
+
+class JoinMeetingIn(BaseModel):
+    display_name: str
+
+    @field_validator("display_name")
+    @classmethod
+    def name_must_be_valid(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Display name is required.")
+        if len(v) > 50:
+            raise ValueError("Display name must be 50 characters or fewer.")
+        return v
+
+
+class SelfMuteIn(BaseModel):
+    is_muted: bool
