@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+.venv/
+venv/
+backend/.env
+backend/*.db
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+frontend/.env
+.next/
+
+# General
+.DS_Store
+.env
+.scratch/
