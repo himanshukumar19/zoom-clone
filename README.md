@@ -50,7 +50,7 @@ zoom-clone/
 ├── CONTEXT.md                  # domain glossary + locked decisions
 ├── AGENTS.md                   # repo rules for coding agents
 ├── docs/
-│   ├── PROJECT_PLAN (1).md     # build spec (source of truth)
+│   ├── PROJECT_PLAN.md     # build spec (source of truth)
 │   ├── adr/                    # 3 ADRs: tiles-only room, no-auth identity, early join
 │   ├── specs/                  # 6 feature specs (00–05)
 │   ├── tickets/                # T-001…T-027 implementation tickets
@@ -188,9 +188,17 @@ See full endpoint table above (`/api/health`, instant, schedule, list, get/start
 - **SQLite**: file-based (`zoom_clone.db`), `PRAGMA foreign_keys=ON`; ephemeral on Render (resets on restart/redeploy and is re-seeded with demo data).
 - **Original work only**: own text/SVG wordmark (`components/Wordmark.tsx`); no copied Zoom logos/assets/code.
 
+## Development process
+
+Following `docs/PROJECT_PLAN.md` → specs (`docs/specs/`) → tickets (`docs/tickets/`) → one commit per ticket (`T-0XX: description`), with QA report at `docs/qa/T-025-live-qa-report.md`. Source is original; no copied Zoom assets/logos (wordmark is text/SVG).
+
+## Demo video
+
+- Demo video: (link to be added)
+
 ## Docs
 
-- Build spec: `docs/PROJECT_PLAN (1).md`
+- Build spec: `docs/PROJECT_PLAN.md`
 - Glossary: `CONTEXT.md` · Decisions: `docs/adr/` · Specs: `docs/specs/` · Tickets: `docs/tickets/`
 - Tracker mirror: `.scratch/` (all specs/tickets `ready-for-agent`)
 
