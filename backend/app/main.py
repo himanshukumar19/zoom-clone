@@ -6,9 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine
 from app.models import Meeting, Participant, User  # noqa: F401 (register tables)
+from app.routers.meetings import router as meetings_router
 from app.seed import seed_if_empty
 
 app = FastAPI(title="zoom-clone API")
+
+app.include_router(meetings_router)
 
 app.add_middleware(
     CORSMiddleware,
