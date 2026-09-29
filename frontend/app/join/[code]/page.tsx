@@ -7,6 +7,7 @@ import { getMeeting, joinMeeting } from "@/lib/api";
 import { loadParticipantId, saveParticipantId } from "@/lib/session";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
 import type { Meeting } from "@/types";
 
@@ -98,7 +99,7 @@ export default function JoinNamePage() {
     return (
       <div className="min-h-screen bg-white text-ink flex items-center justify-center px-6">
         <header className="absolute top-0 left-0 right-0 flex h-16 items-center justify-between border-b border-line bg-white px-6">
-          <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md"><Wordmark /></a>
+          <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md"><Wordmark /></Link>
         </header>
         <div className="w-full max-w-sm text-center">
           <p className="text-sm text-muted">Loading meeting…</p>
@@ -110,13 +111,13 @@ export default function JoinNamePage() {
   return (
     <div className="relative min-h-screen bg-white text-ink flex flex-col">
       <header className="flex h-16 items-center justify-between border-b border-line bg-white px-6">
-        <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
+        <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
           <Wordmark />
-        </a>
+        </Link>
         <nav className="flex items-center gap-6 text-sm font-medium text-ink">
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
-          <a href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</a>
-          <a href="/join" className="text-zoom-blue">Join</a>
+          <Link href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</Link>
+          <Link href="/join" className="text-zoom-blue">Join</Link>
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Host</a>
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Web App</a>
         </nav>

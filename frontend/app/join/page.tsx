@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { parseMeetingInput } from "@/lib/parseMeetingInput";
 import { getMeeting } from "@/lib/api";
@@ -57,13 +58,13 @@ export default function JoinPage() {
     <div className="min-h-screen bg-white text-ink">
       {/* Top bar consistent with shared layout (spec §8.2 / D19) */}
       <header className="flex h-16 items-center justify-between border-b border-line bg-white px-6">
-        <a href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
+        <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
           <Wordmark />
-        </a>
+        </Link>
         <nav className="flex items-center gap-6 text-sm font-medium text-ink">
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
-          <a href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</a>
-          <a href="/join" className="text-zoom-blue">Join</a>
+          <Link href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</Link>
+          <Link href="/join" className="text-zoom-blue">Join</Link>
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Host</a>
           <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Web App</a>
         </nav>
