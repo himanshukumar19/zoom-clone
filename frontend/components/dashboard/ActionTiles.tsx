@@ -1,6 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Calendar, Camera, Plus } from "lucide-react";
+import { createInstantMeeting } from "@/lib/api";
+import { saveParticipantId } from "@/lib/session";
+import { useToast } from "@/components/ui/Toast";
 
 // Action tile variants. Colors/spacing come from plan §8.0 tokens.
 // Click wiring lands in T-013/T-014.
@@ -39,6 +43,23 @@ export function ActionTile({ label, icon, variant = "new", ...props }: ActionTil
 }
 
 export function ActionTiles() {
+  const router = useRouter();
+  const pushToast = useToast();
+
+  const handleNew = async () => {
+    try {
+      const result = await createInstantMeeting();
+      saveParticipantId(result.meeting.meeting_code, result.participant.id);
+      router.push(`/meeting/${result.meeting.meeting_code}`);
+    } catch (e: unknown) {
+      const msg =
+        (e as { detail?: string; message?: string }).detail ||
+        (e as { detail?: string; message?: string }).message ||
+        "Failed to start meeting.";
+      pushToast("error", msg);
+    }
+  };
+
   return (
     <nav className="flex flex-col gap-4 sm:flex-row sm:justify-center sm:gap-6">
       <ActionTile
@@ -46,6 +67,7 @@ export function ActionTiles() {
         variant="new"
         aria-label="Start a new meeting"
         icon={<Camera className="h-8 w-8" strokeWidth={2} />}
+        onClick={handleNew}
       />
       <ActionTile
         label="Join"
