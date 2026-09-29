@@ -227,6 +227,36 @@ def join_by_code(
             raise HTTPException(
                 status_code=403, detail="You were removed from this meeting."
             )
+    # Reuse active participant row if this session already exists (prevent
+    # duplicate rows from refresh / double-click / Strict Mode).
+    if caller_id is not None:
+        existing = db.get(Participant, caller_id)
+        if existing is not None and existing.meeting_id == meeting.id and existing.is_removed is False and existing.left_at is None:
+            # Update display name if changed and return existing row.
+            existing.display_name = name
+            db.commit()
+            db.refresh(existing)
+            payload = MeetingWithParticipantOut(
+                meeting=MeetingOut.from_meeting(meeting),
+                participant=ParticipantOut.from_participant(existing),
+            )
+            return payload
+    # Also guard by active display name for same meeting (refresh case).
+    existing_name = db.scalar(
+        select(Participant).where(
+            Participant.meeting_id == meeting.id,
+            Participant.display_name == name,
+            Participant.left_at.is_(None),
+            Participant.is_removed.is_(False),
+        )
+    )
+    if existing_name is not None:
+        payload = MeetingWithParticipantOut(
+            meeting=MeetingOut.from_meeting(meeting),
+            participant=ParticipantOut.from_participant(existing_name),
+        )
+        db.commit()
+        return payload
     now = _utcnow()
     if meeting.status == "scheduled":
         meeting.status = "live"
@@ -251,6 +281,28 @@ def join_by_code(
     return payload
 
 
+def end_by_code(db: Session, code: str, participant_id: int | None) -> dict:
+    """Host ends meeting for all (T-007). 403 non-host, 410 ended, 404 unknown."""
+    from app.services.participant_service import require_caller, require_host
+    meeting = get_by_code(db, code)
+    if meeting.status == "ended":
+        raise HTTPException(status_code=410, detail="This meeting has ended.")
+    caller = require_caller(db, meeting, participant_id)
+    require_host(caller)
+    meeting.status = "ended"
+    meeting.ended_at = _utcnow()
+    for p in db.scalars(
+        select(Participant).where(
+            Participant.meeting_id == meeting.id,
+            Participant.left_at.is_(None),
+            Participant.is_removed.is_(False),
+        )
+    ).all():
+        p.left_at = meeting.ended_at
+    db.commit()
+    return {"ok": True}
+
+
 def list_meetings(
     db: Session, meeting_filter: str = "upcoming"
 ) -> list[MeetingOut]:
@@ -259,6 +311,45 @@ def list_meetings(
     Newest = most recently created. Filtering happens in Python (the dashboard
     set is small) so naive-vs-aware SQLite datetimes are handled in one place.
     """
+    # Lazy expiry (no background job): live meeting with 0 active participants
+    # becomes ended; live meeting past started_at + duration + 15 min becomes
+    # ended (closing open left_at values); instant meetings capped at 40 min.
+    now = _utcnow()
+    for row in db.scalars(select(Meeting)).all():
+        if row.status == "live" and row.started_at is not None:
+            # Zero active participants → ended
+            active = db.scalars(
+                select(Participant).where(
+                    Participant.meeting_id == row.id,
+                    Participant.left_at.is_(None),
+                    Participant.is_removed.is_(False),
+                )
+            ).all()
+            if len(active) == 0:
+                row.status = "ended"
+                row.ended_at = now
+                for p in db.scalars(
+                    select(Participant).where(
+                        Participant.meeting_id == row.id,
+                        Participant.left_at.is_(None),
+                    )
+                ).all():
+                    p.left_at = now
+            else:
+                # Past scheduled end + 15 min buffer (or 40 min cap for instant)
+                cap = timedelta(minutes=40) if row.duration_minutes is None else timedelta(minutes=row.duration_minutes + 15)
+                if now > _as_utc(row.started_at) + cap:
+                    row.status = "ended"
+                    row.ended_at = now
+                    for p in db.scalars(
+                        select(Participant).where(
+                            Participant.meeting_id == row.id,
+                            Participant.left_at.is_(None),
+                        )
+                    ).all():
+                        p.left_at = now
+    db.commit()
+
     if meeting_filter not in ("upcoming", "recent"):
         raise HTTPException(
             status_code=422, detail="Filter must be 'upcoming' or 'recent'."

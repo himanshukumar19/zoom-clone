@@ -143,6 +143,22 @@ export default function RoomPage() {
     }
   }, [codeNormalized, participantId, isHost, fetchParticipants, pushToast]);
 
+  const handleEnd = useCallback(async () => {
+    if (participantId == null || !isHost) return;
+    try {
+      await fetch(`/api/meetings/${codeNormalized}/end`, {
+        method: "POST",
+        headers: { "X-Participant-Id": String(participantId), "Content-Type": "application/json" },
+      });
+      clearParticipantId(codeNormalized);
+      pushToast("success", "Meeting ended for all.");
+      router.push("/");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "End meeting failed.";
+      pushToast("error", msg);
+    }
+  }, [codeNormalized, participantId, isHost, router, pushToast]);
+
   const handleLeave = useCallback(async () => {
     if (participantId == null) return;
     leftRef.current = true;
@@ -235,6 +251,8 @@ export default function RoomPage() {
         onParticipantsToggle={() => setPanelOpen((s) => !s)}
         onInvite={() => setInviteOpen(true)}
         onLeave={handleLeave}
+        isHost={isHost}
+        onEnd={handleEnd}
       />
 
       {/* Side participants panel (T-019: count, Host/Me labels, muted icons; sheet on mobile) */}

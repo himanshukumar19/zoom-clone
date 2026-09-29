@@ -151,7 +151,7 @@ export default function SchedulePage() {
     return (
       <div className="min-h-screen bg-app flex flex-col">
         <div className="mx-auto max-w-3xl px-6 py-8 flex-1">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-6">
+          <Link href="/meetings" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-6">
             <ArrowLeft className="h-4 w-4" />
             Back to Meetings
           </Link>
@@ -218,7 +218,7 @@ export default function SchedulePage() {
     <div className="min-h-screen bg-app flex flex-col">
       <div className="mx-auto max-w-4xl px-4 py-6 flex-1">
         <main className="flex-1 min-w-0">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-2">
+          <Link href="/meetings" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Meetings
           </Link>
@@ -393,7 +393,7 @@ export default function SchedulePage() {
             {/* Buttons */}
             <div className="flex gap-3 pt-2">
               <Link
-                href="/"
+                href="/meetings"
                 className="inline-flex items-center justify-center rounded-lg border border-line bg-white px-6 py-2.5 text-sm font-bold text-ink hover:bg-app transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
               >
                 Cancel

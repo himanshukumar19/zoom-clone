@@ -323,7 +323,7 @@ Font: Lato-like sans. Radius: 8px for inputs/buttons/cards, ~18px on the round-s
 
 ### 8.1 Dashboard, web client home (`03-web-client-home.png`)
 - **Top bar** (white, ~64px, bottom border): left = "zoom" wordmark + divider + "Workplace" text. Center = back/forward/history icons and a light-grey rounded search pill with placeholder "Search ⌘ + K". Right = bell icon and round avatar with a small green online dot. Build the bar with the default user's avatar (opens a small static menu placeholder, with **no** Sign in / Sign out items) and a settings entry; the extra items in the real bar (Discover Products, Pricing, Admin Center, Download, Upgrade) are not required, so keep at most the search pill as a static placeholder.
-- **Left icon rail** (~78px, light grey-blue): stacked icon + 11px label items: **Home** (active: white rounded pill), Meetings, and Settings pinned to the bottom. Chat and Contacts exist in Zoom but are not part of this assignment, so leave them out.
+- **Left icon rail** (~78px, light grey-blue): stacked icon + 11px label items: **Home**, **Meetings**, **Chat**, **Contacts**, and **Settings** pinned to the bottom. These are static placeholder pages for visual similarity; only Home, Meetings, Schedule, Join, and Room have real functionality.
 - **Main panel**: white rounded container on the `--bg-app` background, content centered in a column about 600px wide.
 - **Clock block**: time in bold ~40px (`9:14 PM`), date below in muted ~16px (`Tuesday, September 29`). Updates every second/minute from the browser clock.
 - **Action tiles** (three, horizontally centered, ~56px round-squares with a 14px muted label underneath, ~60px gaps):

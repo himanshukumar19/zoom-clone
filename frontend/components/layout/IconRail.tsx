@@ -6,18 +6,13 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/", icon: Home, label: "Home", match: (p: string) => p === "/" },
-  { href: "#", icon: MessageSquare, label: "Chat", match: () => false },
-  {
-    href: "/",
-    icon: Video,
-    label: "Meetings",
-    match: (p: string) => p === "/" && false, // meetings lives on home
-  },
-  { href: "#", icon: Users, label: "Contacts", match: () => false },
+  { href: "/chat", icon: MessageSquare, label: "Chat", match: (p: string) => p.startsWith("/chat") },
+  { href: "/meetings", icon: Video, label: "Meetings", match: (p: string) => p === "/meetings" || p === "/" },
+  { href: "/contacts", icon: Users, label: "Contacts", match: (p: string) => p.startsWith("/contacts") },
 ];
 
 const settingsItem = {
-  href: "#",
+  href: "/settings",
   icon: Settings,
   label: "Settings",
   match: (p: string) => p.startsWith("/settings"),

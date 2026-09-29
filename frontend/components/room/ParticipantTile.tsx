@@ -11,7 +11,7 @@ function initials(name: string): string {
 
 export function ParticipantTile({ p }: { p: Participant }) {
   return (
-    <div className="relative flex flex-col items-center justify-center rounded-xl bg-[#2A2A2E] p-6 shadow-lg transition hover:bg-[#34343A]">
+    <div className="relative flex flex-col items-center justify-center rounded-xl bg-[#2A2A2E] p-6 shadow-lg transition hover:bg-[#34343A] aspect-video">
       {/* Initials avatar */}
       <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 text-3xl font-black tracking-tight text-white shadow-inner ring-1 ring-white/10">
         {initials(p.display_name)}

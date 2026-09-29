@@ -11,6 +11,8 @@ export function Toolbar({
   onParticipantsToggle,
   onInvite,
   onLeave,
+  isHost,
+  onEnd,
 }: {
   isMuted: boolean;
   onMuteToggle: () => void;
@@ -18,6 +20,8 @@ export function Toolbar({
   onParticipantsToggle: () => void;
   onInvite: () => void;
   onLeave: () => void;
+  isHost?: boolean;
+  onEnd?: () => void;
 }) {
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
 
@@ -88,9 +92,24 @@ export function Toolbar({
       <Modal
         open={leaveConfirmOpen}
         onClose={() => setLeaveConfirmOpen(false)}
-        title="Leave meeting"
+        title={isHost ? "Leave or end meeting" : "Leave meeting"}
       >
         <div className="space-y-4">
+          {isHost && (
+            <>
+              <p className="text-sm text-muted">As host, you can end the meeting for everyone.</p>
+              <button
+                onClick={() => {
+                  setLeaveConfirmOpen(false);
+                  onEnd?.();
+                }}
+                className="w-full rounded-md bg-red-600 px-3 py-2.5 text-sm font-extrabold text-white shadow-sm hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+              >
+                End meeting for all
+              </button>
+              <div className="border-t border-line" />
+            </>
+          )}
           <p className="text-sm text-muted">Are you sure you want to leave this meeting?</p>
           <div className="flex justify-end gap-2">
             <button

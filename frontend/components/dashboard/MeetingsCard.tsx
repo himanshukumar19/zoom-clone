@@ -89,11 +89,6 @@ export function MeetingsCard() {
     <section className="w-full rounded-2xl border border-line bg-white shadow-sm overflow-hidden">
       {/* Header with title + tab strip */}
       <div className="px-6 pt-5 pb-0">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-ink">Upcoming</h2>
-        </div>
-
-        {/* Flat underline tabs — matches Zoom reference image 07 */}
         <div className="flex border-b border-line">
           {(["upcoming", "recent"] as const).map((t) => (
             <button
@@ -105,7 +100,7 @@ export function MeetingsCard() {
                   : "border-transparent text-muted hover:text-ink"
               }`}
             >
-              {t === "upcoming" ? "Upcoming" : "Previous"}
+              {t === "upcoming" ? "Upcoming" : "Recent"}
             </button>
           ))}
         </div>
@@ -175,7 +170,7 @@ export function MeetingsCard() {
                           aria-label={`Start meeting ${m.meeting_code_display}`}
                         >
                           <Play className="h-3.5 w-3.5" fill="currentColor" />
-                          Start
+                          {m.status === "live" ? "Join" : "Start"}
                         </button>
                         <button
                           onClick={() => handleCopy(m.invite_link)}

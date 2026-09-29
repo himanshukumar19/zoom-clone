@@ -92,6 +92,15 @@ def leave_meeting(
     return participant_service.leave(db, code, x_participant_id)
 
 
+@router.post("/{code}/end", summary="Host ends meeting for all")
+def end_meeting(
+    code: str,
+    db: Session = Depends(get_db),
+    x_participant_id: int | None = Header(default=None, alias="X-Participant-Id"),
+) -> dict:
+    return meeting_service.end_by_code(db, code, x_participant_id)
+
+
 @router.get(
     "/{code}/participants",
     response_model=list[ParticipantOut],
