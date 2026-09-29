@@ -179,6 +179,31 @@ erDiagram
     }
 ```
 
+## API (core)
+
+- `GET /api/me` — default user
+- `POST /api/meetings/instant` — create instant
+- `POST /api/meetings` — schedule
+- `GET /api/meetings?filter=upcoming|recent`
+- `GET /api/meetings/{code}`
+- `POST /api/meetings/{code}/start`
+- `POST /api/meetings/{code}/join`
+- `POST /api/meetings/{code}/leave`
+- `POST /api/meetings/{code}/end` — host only
+- `GET /api/meetings/{code}/participants`
+- `PATCH /api/meetings/{code}/participants/me`
+- `POST /api/meetings/{code}/mute-all` — host only
+- `DELETE /api/meetings/{code}/participants/{id}` — host only
+
+## Database (ER diagram)
+
+```mermaid
+erDiagram
+    users ||--o{ meetings : hosts
+    users ||--o{ participants : joins
+    meetings ||--o{ participants : contains
+```
+
 ## Assumptions (locked in grill)
 
 - **No auth**: one seeded Default User (id=1, Demo User) is always "logged in". No login/signup/passwords/tokens/routes.
