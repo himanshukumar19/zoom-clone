@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Clock as ClockIcon, Copy, Play, Check, Link as LinkIcon } from "lucide-react";
-import { listMeetings, startMeeting } from "@/lib/api";
+import { scheduleMeeting, startMeeting } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { useMeetings } from "@/hooks/useMeetings";
 import { EmptyState } from "./EmptyState";
 import type { Meeting, MeetingListFilter } from "@/types";
 
@@ -44,31 +45,14 @@ function LiveBadge() {
 
 export function MeetingsCard() {
   const [tab, setTab] = useState<MeetingListFilter>("upcoming");
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [loading, setLoading] = useState(true);
   const pushToast = useToast();
-
-  const fetchList = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await listMeetings(tab);
-      setMeetings(data);
-    } catch {
-      // Silently fail; card shows empty state if needed.
-    } finally {
-      setLoading(false);
-    }
-  }, [tab]);
-
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
+  const { meetings, loading, refetch } = useMeetings(tab);
 
   const handleStart = async (code: string) => {
     try {
       await startMeeting(code);
       pushToast("success", "Meeting started.");
-      await fetchList();
+      await refetch();
     } catch (e) {
       const err = e as { status?: number; message?: string; detail?: string };
       const msg = err?.message || err?.detail || "Failed to start meeting.";

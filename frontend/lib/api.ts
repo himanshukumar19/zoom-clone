@@ -122,6 +122,7 @@ export function scheduleMeeting(input: ScheduleMeetingInput): Promise<Meeting> {
 export function listMeetings(filter: MeetingListFilter): Promise<Meeting[]> {
   return request<Meeting[]>(
     `/api/meetings?filter=${encodeURIComponent(filter)}`,
+    { cache: "no-store" },
   );
 }
 
