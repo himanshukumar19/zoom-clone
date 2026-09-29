@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Link2, MicOff, X } from "lucide-react";
-import { getMeeting, listParticipants, setSelfMuted, leaveMeeting } from "@/lib/api";
+import { getMeeting, listParticipants, setSelfMuted, leaveMeeting, muteAll, removeParticipant } from "@/lib/api";
 import { loadParticipantId, clearParticipantId } from "@/lib/session";
 import { InviteDialog } from "@/components/room/InviteDialog";
 import { ParticipantTile } from "@/components/room/ParticipantTile";
@@ -117,6 +117,32 @@ export default function RoomPage() {
     }
   }, [codeNormalized, participantId, participants, fetchParticipants, pushToast]);
 
+  const isHost = self?.role === "host";
+
+  const handleMuteAll = useCallback(async () => {
+    if (participantId == null || !isHost) return;
+    try {
+      await muteAll(codeNormalized, participantId);
+      fetchParticipants();
+      pushToast("success", "Muted all participants.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Mute all failed.";
+      pushToast("error", msg);
+    }
+  }, [codeNormalized, participantId, isHost, fetchParticipants, pushToast]);
+
+  const handleRemove = useCallback(async (targetId: number) => {
+    if (participantId == null || !isHost) return;
+    try {
+      await removeParticipant(codeNormalized, participantId, targetId);
+      fetchParticipants();
+      pushToast("success", "Participant removed.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Remove failed.";
+      pushToast("error", msg);
+    }
+  }, [codeNormalized, participantId, isHost, fetchParticipants, pushToast]);
+
   const handleLeave = useCallback(async () => {
     if (participantId == null) return;
     leftRef.current = true;
@@ -218,6 +244,15 @@ export default function RoomPage() {
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#A0A0A8]">
               Participants <span className="text-white">({participants.length})</span>
             </h3>
+            {isHost && (
+              <button
+                onClick={handleMuteAll}
+                aria-label="Mute all participants"
+                className="rounded bg-zoom-blue px-2 py-1 text-[10px] font-extrabold text-white hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+              >
+                Mute all
+              </button>
+            )}
             <button
               onClick={() => setPanelOpen(false)}
               aria-label="Close panel"
@@ -245,6 +280,15 @@ export default function RoomPage() {
                   <span className="text-[#A0A0A8]" aria-label="Muted" title="Muted">
                     <MicOff className="h-4 w-4" />
                   </span>
+                )}
+                {isHost && p.id !== participantId && p.role !== "host" && (
+                  <button
+                    onClick={() => handleRemove(p.id)}
+                    aria-label={`Remove ${p.display_name}`}
+                    className="rounded bg-red-600/90 px-2 py-0.5 text-[10px] font-extrabold text-white hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                  >
+                    Remove
+                  </button>
                 )}
               </div>
             ))}
