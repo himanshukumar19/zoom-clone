@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Clock as ClockIcon, Copy, Play, Check, Link as LinkIcon } from "lucide-react";
 import { listMeetings, startMeeting } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { EmptyState } from "./EmptyState";
 import type { Meeting, MeetingListFilter } from "@/types";
 
 function formatLocalDateTime(utcString: string | null): string {
@@ -30,31 +31,6 @@ function formatDuration(mins: number | null): string {
     return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
   }
   return `${mins} min`;
-}
-
-function EmptyIllustration({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-muted">
-      {/* Simple calendar/meetings illustration using emoji or SVG */}
-      <svg
-        width="80"
-        height="80"
-        viewBox="0 0 80 80"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <rect x="8" y="16" width="64" height="56" rx="6" fill="#EEF1F6" />
-        <rect x="8" y="16" width="64" height="20" rx="6" fill="#D8E2F5" />
-        <rect x="20" y="8" width="8" height="16" rx="4" fill="#0B5CFF" />
-        <rect x="52" y="8" width="8" height="16" rx="4" fill="#0B5CFF" />
-        <rect x="20" y="44" width="12" height="12" rx="2" fill="#C5D5F0" />
-        <rect x="38" y="44" width="12" height="12" rx="2" fill="#C5D5F0" />
-        <rect x="56" y="44" width="4" height="12" rx="2" fill="#C5D5F0" />
-      </svg>
-      <p className="text-sm font-medium text-muted">{label}</p>
-    </div>
-  );
 }
 
 function LiveBadge() {
@@ -151,13 +127,7 @@ export function MeetingsCard() {
             ))}
           </div>
         ) : meetings.length === 0 ? (
-          <EmptyIllustration
-            label={
-              tab === "upcoming"
-                ? "No upcoming meetings. Schedule one or start instantly."
-                : "No previous meetings."
-            }
-          />
+          <EmptyState text={tab === "upcoming" ? "No meetings scheduled." : "No recent meetings."} />
         ) : (
           <ul className="divide-y divide-line">
             {meetings.map((m) => (

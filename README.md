@@ -184,6 +184,7 @@ erDiagram
 - **No auth**: one seeded Default User (id=1, Demo User) is always "logged in". No login/signup/passwords/tokens/routes.
 - **No real audio/video**: room shows initials tiles; mute is a state flag; roster refreshes by 5s polling, no WebSockets.
 - **Room identity is not security**: frontend `sessionStorage` participant id sent as `X-Participant-Id`, used only for host-only checks (403 otherwise). Anyone can forge it — it is a business-rule input, not a credential.
+- **Empty-state illustration**: uses user-supplied PNG (`frontend/public/empty-meetings.png`), not an SVG — deliberate deviation.
 - Guests may join scheduled meetings before host Start (first join flips to live); join on ended → 410.
 - SQLite on the host is ephemeral — seed re-runs on restart.
 - Times stored in UTC, displayed in browser-local zone.
