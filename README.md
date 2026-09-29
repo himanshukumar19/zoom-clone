@@ -1,7 +1,7 @@
 # zoom-clone — Video Conferencing Platform (Zoom Clone)
 
-> **Status: in progress — 1 of 27 tickets done (T-001).** Specs grill-locked, tickets published (`docs/tickets/`).
-> The backend skeleton runs today (`GET /api/health` → `{"status":"ok"}`); no models, endpoints or frontend yet.
+> **Status: in progress — 2 of 27 tickets done (T-001, T-002).** Specs grill-locked, tickets published (`docs/tickets/`).
+> The backend skeleton runs today (`GET /api/health` → `{"status":"ok"}`) with models + auto-seed on empty DB; no endpoints or frontend yet.
 > Sections below are marked **[done]** or **[planned]** so you can tell what actually works. Deployed links TBD (T-024).
 
 Functional Zoom web-app clone: create, join, and schedule meetings with a clean Zoom-like interface. Built as a Scaler SDE Fullstack assignment (1-day timeline).
@@ -31,6 +31,8 @@ Status per feature — the plan is the 4 core flows; only the backend foundation
 
 **[done] T-001 — backend scaffold:** env-driven settings, SQLAlchemy engine/session with `PRAGMA foreign_keys=ON`, CORS from `CORS_ORIGINS`, `GET /api/health`.
 
+**[done] T-002 — models + seed:** `users` / `meetings` / `participants` with CHECK constraints (type/status/duration), unique indexed meeting code, cascade delete to participants; startup `create_all` + seed (Demo User, 3 upcoming + 4 ended meetings, dates relative to now) that runs only when the users table is empty.
+
 ## Repo layout
 
 ```
@@ -49,8 +51,9 @@ zoom-clone/
 │   │   ├── main.py             # app, CORS, startup hook
 │   │   ├── config.py           # env settings
 │   │   ├── database.py         # engine, session, FK pragma
-│   │   ├── models/ schemas/ routers/ services/ utils/   # T-002 onward
-│   │   └── seed.py             # T-002
+│   │   ├── models/             # [done — T-002] user.py, meeting.py, participant.py
+│   │   ├── schemas/ routers/ services/ utils/   # T-003 onward
+│   │   └── seed.py             # [done — T-002] relative seed, runs when users empty
 │   ├── requirements.txt
 │   └── .env.example
 └── frontend/                   # Next.js app  [not created yet — T-009]
@@ -69,8 +72,7 @@ uvicorn app.main:app --reload
 curl http://localhost:8000/api/health   # {"status":"ok"}
 ```
 
-Startup runs `create_all` (a no-op until models land in T-002). The seed script auto-runs when
-the user table is empty (Demo User + upcoming/ended meetings with dates relative to now) — from T-002.
+Startup runs `create_all` then seeds demo data when the users table is empty (Demo User + 3 upcoming / 4 ended meetings with dates relative to now). Reboots with data do not re-seed.
 
 Frontend **[planned]**:
 
@@ -105,7 +107,7 @@ Room actions take the caller's participant id via the `X-Participant-Id` header 
 
 ## ER diagram
 
-**[planned — lands in T-002]** `users` 1—N `meetings` (host); `meetings` 1—N `participants`; `users` 1—N `participants` (optional, host only). Active participant = `left_at IS NULL AND is_removed = false`.
+**[done — T-002]** `users` 1—N `meetings` (host); `meetings` 1—N `participants`; `users` 1—N `participants` (optional, host only). Active participant = `left_at IS NULL AND is_removed = false`.
 
 ```mermaid
 erDiagram
@@ -167,7 +169,7 @@ erDiagram
 | Ticket | Scope | State |
 |---|---|---|
 | T-001 | Backend scaffold, config, DB session, CORS, health | done (`294d437`) |
-| T-002 | Models + schema + seed | next |
+| T-002 | Models + schema + seed | done (`1f20bfe`) |
 | T-003…T-008 | Endpoints, host controls, backend tests | planned |
 | T-009…T-027 | Frontend, flows, room, polish, deploy, README | planned |
 
