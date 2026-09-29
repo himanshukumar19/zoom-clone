@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Link2, Copy, Check } from "lucide-react";
-import { getMeeting, listParticipants } from "@/lib/api";
-import { loadParticipantId } from "@/lib/session";
+import { Link2, MicOff, X } from "lucide-react";
+import { getMeeting, listParticipants, setSelfMuted, leaveMeeting } from "@/lib/api";
+import { loadParticipantId, clearParticipantId } from "@/lib/session";
 import { InviteDialog } from "@/components/room/InviteDialog";
 import { ParticipantTile } from "@/components/room/ParticipantTile";
+import { Toolbar } from "@/components/room/Toolbar";
 import { useToast } from "@/components/ui/Toast";
 import type { Meeting, Participant } from "@/types";
 
@@ -32,8 +33,8 @@ export default function RoomPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [panelOpen, setPanelOpen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchMeeting = useCallback(async () => {
@@ -87,17 +88,33 @@ export default function RoomPage() {
     return () => clearInterval(interval);
   }, [meeting, codeNormalized, fetchParticipants]);
 
-  const handleCopy = async () => {
-    if (!meeting) return;
+  const participantId = loadParticipantId(codeNormalized);
+  const self = participants.find((p) => p.id === participantId);
+  const selfMuted = self ? self.is_muted : false;
+
+  const handleMuteToggle = useCallback(async () => {
+    if (participantId == null) return;
+    const currentMuted = participants.find((p) => p.id === participantId)?.is_muted ?? false;
     try {
-      await navigator.clipboard.writeText(meeting.invite_link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-      pushToast("success", "Invite link copied.");
+      await setSelfMuted(codeNormalized, participantId, !currentMuted);
+      fetchParticipants();
     } catch {
-      pushToast("error", "Failed to copy link.");
+      pushToast("error", "Failed to update mute.");
     }
-  };
+  }, [codeNormalized, participantId, participants, fetchParticipants, pushToast]);
+
+  const handleLeave = useCallback(async () => {
+    if (participantId == null) return;
+    try {
+      await leaveMeeting(codeNormalized, participantId);
+      clearParticipantId(codeNormalized);
+      pushToast("success", "You left the meeting.");
+      router.push("/");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Leave failed.";
+      pushToast("error", msg);
+    }
+  }, [codeNormalized, participantId, router, pushToast]);
 
   if (loading || !meeting) {
     return (
@@ -169,22 +186,55 @@ export default function RoomPage() {
         </div>
       </section>
 
-      {/* Bottom invite link bar (minimal shell, no toolbar actions per T-017 scope) */}
-      <section className="border-t border-white/10 bg-[#232326]/60 px-6 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <code className="truncate text-xs font-medium text-[#A0A0A8]">{meeting.invite_link}</code>
+      {/* Bottom toolbar (T-018): mute, participants toggle, invite, leave with confirm */}
+      <Toolbar
+        isMuted={selfMuted}
+        onMuteToggle={handleMuteToggle}
+        participantsOpen={panelOpen}
+        onParticipantsToggle={() => setPanelOpen((s) => !s)}
+        onInvite={() => setInviteOpen(true)}
+        onLeave={handleLeave}
+      />
+
+      {/* Simple participants panel (T-018 minimal: count + self/host labels; T-019 builds full panel) */}
+      {panelOpen && (
+        <aside className="fixed bottom-16 left-0 right-0 z-40 mx-auto max-w-md rounded-t-2xl border-t border-white/10 bg-[#232326]/95 p-4 shadow-2xl backdrop-blur-md sm:bottom-16 sm:max-w-lg md:bottom-auto md:right-4 md:top-24 md:max-w-sm md:rounded-2xl md:border md:border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#A0A0A8]">Participants</h3>
+            <button
+              onClick={() => setPanelOpen(false)}
+              aria-label="Close panel"
+              className="rounded p-1 text-[#A0A0A8] hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            onClick={handleCopy}
-            aria-label="Copy invite link"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-zoom-blue px-3 py-1.5 text-xs font-bold text-white hover:bg-zoom-blue-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
-          >
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </section>
+          <div className="max-h-[60vh] overflow-y-auto space-y-2">
+            {participants.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 text-xs font-black text-white">
+                  {p.display_name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-bold text-white">{p.display_name}</span>
+                    {p.role === "host" && <span className="rounded-full bg-zoom-blue px-1.5 py-0.5 text-[10px] font-extrabold text-white">Host</span>}
+                  </div>
+                  <div className="text-xs text-[#A0A0A8]">
+                    {p.id === participantId ? "You" : ""}
+                    {p.is_muted ? (p.id === participantId ? " · Muted" : " · Muted") : ""}
+                  </div>
+                </div>
+                {p.is_muted && (
+                  <span className="text-[#A0A0A8]" aria-label="Muted" title="Muted">
+                    <MicOff className="h-4 w-4" />
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </aside>
+      )}
 
       {/* Entry invite dialog */}
       <InviteDialog
