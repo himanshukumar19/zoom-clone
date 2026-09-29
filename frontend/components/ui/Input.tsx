@@ -22,7 +22,7 @@ export function Input({
         id={inputId}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${inputId}-error` : undefined}
-        className={`h-11 w-full rounded-lg border border-line bg-white px-3 text-ink placeholder:text-muted focus:outline-2 focus:outline-zoom-blue focus:ring-4 focus:ring-zoom-blue/15 disabled:cursor-not-allowed disabled:bg-app disabled:text-muted ${className}`}
+        className={`h-11 w-full rounded-lg border border-line bg-white px-3 text-ink placeholder:text-muted focus:outline-2 focus:outline-zoom-blue focus:ring-4 focus:ring-zoom-blue/15 hover:border-zoom-blue/40 disabled:cursor-not-allowed disabled:bg-app disabled:text-muted ${className}`}
         {...props}
       />
       {error && (
