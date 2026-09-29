@@ -82,7 +82,7 @@ zoom-clone/
 
 ## Setup
 
-Backend **[done]** — verified on a clean Python 3.9+ venv:
+Backend **[done]** — verified on a clean Python 3.11+ venv (see `.python-version`):
 
 ```bash
 cd backend
