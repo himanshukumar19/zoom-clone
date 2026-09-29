@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
+import { LayoutShell } from "@/components/layout/LayoutShell";
 
 // Lato approximates Zoom's sans (plan D17). Loaded once here.
 const lato = Lato({
@@ -23,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lato.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <LayoutShell />
+          <div className="pt-16 pl-14">{children}</div>
+        </ToastProvider>
       </body>
     </html>
   );
