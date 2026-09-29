@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Clock as ClockIcon, Copy, Play, Check } from "lucide-react";
+import { Clock as ClockIcon, Copy, Play, Check, Link as LinkIcon } from "lucide-react";
 import { listMeetings, startMeeting } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import type { Meeting, MeetingListFilter } from "@/types";
@@ -24,18 +24,35 @@ function formatLocalDateTime(utcString: string | null): string {
 
 function formatDuration(mins: number | null): string {
   if (mins == null) return "—";
+  if (mins >= 60) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
+  }
   return `${mins} min`;
 }
 
 function EmptyIllustration({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted">
-      <img
-        src="/empty-meetings.png"
-        alt="No meetings"
-        className="h-16 w-auto object-contain opacity-90"
-      />
-      <p className="text-sm font-medium">{label}</p>
+    <div className="flex flex-col items-center justify-center gap-4 py-16 text-muted">
+      {/* Simple calendar/meetings illustration using emoji or SVG */}
+      <svg
+        width="80"
+        height="80"
+        viewBox="0 0 80 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <rect x="8" y="16" width="64" height="56" rx="6" fill="#EEF1F6" />
+        <rect x="8" y="16" width="64" height="20" rx="6" fill="#D8E2F5" />
+        <rect x="20" y="8" width="8" height="16" rx="4" fill="#0B5CFF" />
+        <rect x="52" y="8" width="8" height="16" rx="4" fill="#0B5CFF" />
+        <rect x="20" y="44" width="12" height="12" rx="2" fill="#C5D5F0" />
+        <rect x="38" y="44" width="12" height="12" rx="2" fill="#C5D5F0" />
+        <rect x="56" y="44" width="4" height="12" rx="2" fill="#C5D5F0" />
+      </svg>
+      <p className="text-sm font-medium text-muted">{label}</p>
     </div>
   );
 }
@@ -92,34 +109,33 @@ export function MeetingsCard() {
     }
   };
 
-  const activeMeetings = meetings;
-
   return (
-    <section className="w-full rounded-2xl border bg-white shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4">
-        <h2 className="text-xl font-black text-ink tracking-tight">Meetings</h2>
-        <div className="flex items-center gap-1 rounded-full bg-app p-0.5 border border-line">
+    <section className="w-full rounded-2xl border border-line bg-white shadow-sm overflow-hidden">
+      {/* Header with title + tab strip */}
+      <div className="px-6 pt-5 pb-0">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-ink">Upcoming</h2>
+        </div>
+
+        {/* Flat underline tabs — matches Zoom reference image 07 */}
+        <div className="flex border-b border-line">
           {(["upcoming", "recent"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+              className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors -mb-px ${
                 tab === t
-                  ? "bg-zoom-blue text-white shadow-sm"
-                  : "text-muted hover:text-ink hover:bg-app"
+                  ? "border-zoom-blue text-zoom-blue"
+                  : "border-transparent text-muted hover:text-ink"
               }`}
             >
-              {t === "upcoming" ? "Upcoming" : "Recent"}
+              {t === "upcoming" ? "Upcoming" : "Previous"}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="mx-6 border-t border-line" />
-
-      {/* Rows */}
+      {/* Meeting rows */}
       <div className="px-6">
         {loading ? (
           <div className="py-8 space-y-4">
@@ -134,41 +150,45 @@ export function MeetingsCard() {
               </div>
             ))}
           </div>
-        ) : activeMeetings.length === 0 ? (
+        ) : meetings.length === 0 ? (
           <EmptyIllustration
             label={
               tab === "upcoming"
-                ? "No meetings scheduled."
-                : "No recent meetings."
+                ? "No upcoming meetings. Schedule one or start instantly."
+                : "No previous meetings."
             }
           />
         ) : (
           <ul className="divide-y divide-line">
-            {activeMeetings.map((m) => (
+            {meetings.map((m) => (
               <li key={m.id} className="py-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {/* Left info */}
                   <div className="flex items-start gap-4 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-app border border-line text-zoom-blue">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-infobg border border-[#C5D8F7] text-zoom-blue">
                       <ClockIcon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-ink truncate max-w-[16rem] sm:max-w-sm md:max-w-md lg:max-w-xl">
+                        <h3 className="text-sm font-semibold text-ink truncate max-w-[16rem] sm:max-w-sm md:max-w-md lg:max-w-xl">
                           {m.title}
                         </h3>
                         {m.status === "live" && <LiveBadge />}
                       </div>
-                      <div className="mt-1 flex items-center gap-3 text-xs text-muted">
-                        <span className="font-medium">
+                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted flex-wrap">
+                        <span>
                           {m.scheduled_start
                             ? formatLocalDateTime(m.scheduled_start)
-                            : "Instant"}
+                            : "Instant meeting"}
                         </span>
-                        <span className="text-line">|</span>
-                        <span>{formatDuration(m.duration_minutes)}</span>
-                        <span className="text-line">|</span>
-                        <span className="font-mono tracking-wide text-ink/70">
+                        {m.duration_minutes != null && (
+                          <>
+                            <span className="text-line">·</span>
+                            <span>{formatDuration(m.duration_minutes)}</span>
+                          </>
+                        )}
+                        <span className="text-line">·</span>
+                        <span className="font-mono tracking-wide">
                           {m.meeting_code_display}
                         </span>
                       </div>
@@ -181,7 +201,7 @@ export function MeetingsCard() {
                       <>
                         <button
                           onClick={() => handleStart(m.meeting_code)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-zoom-blue px-3.5 py-2 text-sm font-bold text-white hover:bg-zoom-blue-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-zoom-blue px-3.5 py-2 text-sm font-semibold text-white hover:bg-zoom-blue-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
                           aria-label={`Start meeting ${m.meeting_code_display}`}
                         >
                           <Play className="h-3.5 w-3.5" fill="currentColor" />
@@ -189,10 +209,10 @@ export function MeetingsCard() {
                         </button>
                         <button
                           onClick={() => handleCopy(m.invite_link)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-bold text-ink hover:bg-app transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink hover:bg-app transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
                           aria-label={`Copy invite link for ${m.meeting_code_display}`}
                         >
-                          <Copy className="h-3.5 w-3.5" />
+                          <LinkIcon className="h-3.5 w-3.5" />
                           Copy Link
                         </button>
                       </>

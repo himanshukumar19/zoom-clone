@@ -2,10 +2,28 @@
 
 import { useEffect, useState } from "react";
 
-const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export function Clock() {
@@ -21,21 +39,25 @@ export function Clock() {
   const weekday = WEEKDAYS[now.getDay()];
   const month = MONTHS[now.getMonth()];
   const day = now.getDate();
-  const year = now.getFullYear();
 
-  const hours = String(now.getHours()).padStart(2, "0");
+  // 12-hour format with AM/PM — matches Zoom web client reference
+  const rawHour = now.getHours();
+  const amPm = rawHour >= 12 ? "PM" : "AM";
+  const hour12 = rawHour % 12 === 0 ? 12 : rawHour % 12;
   const minutes = String(now.getMinutes()).padStart(2, "0");
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1">
+    <div className="flex flex-col items-center justify-center gap-1 select-none">
       <time
+        suppressHydrationWarning
         dateTime={now.toISOString()}
-        className="text-5xl font-extrabold text-ink tabular-nums"
+        className="text-7xl font-black text-ink tabular-nums tracking-tight leading-none"
       >
-        {hours}:{minutes}
+        {hour12}:{minutes}{" "}
+        <span className="text-5xl font-extrabold">{amPm}</span>
       </time>
-      <span className="text-sm font-medium text-muted">
-        {weekday}, {month} {day}, {year}
+      <span className="text-base font-medium text-muted mt-1">
+        {weekday}, {month} {day}
       </span>
     </div>
   );

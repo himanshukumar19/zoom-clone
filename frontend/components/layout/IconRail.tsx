@@ -1,69 +1,88 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Calendar, Settings } from "lucide-react";
+import { Home, MessageSquare, Video, Users, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
+
+const navItems = [
+  { href: "/", icon: Home, label: "Home", match: (p: string) => p === "/" },
+  { href: "#", icon: MessageSquare, label: "Chat", match: () => false },
+  {
+    href: "/",
+    icon: Video,
+    label: "Meetings",
+    match: (p: string) => p === "/" && false, // meetings lives on home
+  },
+  { href: "#", icon: Users, label: "Contacts", match: () => false },
+];
+
+const settingsItem = {
+  href: "#",
+  icon: Settings,
+  label: "Settings",
+  match: (p: string) => p.startsWith("/settings"),
+};
 
 export function IconRail() {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: "/", icon: Home, label: "Home", active: pathname === "/" },
-    { href: "/meetings", icon: Calendar, label: "Meetings", active: pathname.startsWith("/meetings") },
-    { href: "/settings", icon: Settings, label: "Settings", active: pathname.startsWith("/settings") },
-  ];
-
-  const HomeIcon = navItems[0].icon;
-  const MeetingsIcon = navItems[1].icon;
-  const SettingsIcon = navItems[2].icon;
-
   return (
-    <aside className="hidden md:flex fixed inset-y-0 left-0 z-50 w-14 flex-col items-center justify-between border-r bg-sidebar p-4 pt-6 space-y-12">
-      {/* Top: Home */}
-      <Link
-        href={navItems[0].href}
-        className={`
-          relative flex w-9 items-center justify-center rounded-full p-1 transition-colors
-          ${navItems[0].active ? "bg-zoom-blue text-white" : "text-muted hover:bg-muted/10"}
-        `}
-        aria-label="Home"
-      >
-        <HomeIcon className="h-5 w-5" aria-hidden="true" />
-        <span className="absolute left-[calc(100%+8px)] -top-px whitespace-nowrap text-sm font-medium">
-          {navItems[0].label}
-        </span>
-      </Link>
+    <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-16 flex-col items-center border-r border-line bg-white pt-20 pb-4">
+      {/* Top nav items */}
+      <nav className="flex flex-col items-center gap-1 w-full px-1">
+        {navItems.map(({ href, icon: Icon, label, match }) => {
+          const active = match(pathname);
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`flex flex-col items-center gap-0.5 w-full py-2 px-1 rounded-xl transition-colors group ${
+                active
+                  ? "text-zoom-blue"
+                  : "text-muted hover:text-ink hover:bg-app"
+              }`}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon
+                className={`h-6 w-6 transition-colors ${
+                  active ? "text-zoom-blue" : "text-[#555]"
+                }`}
+                strokeWidth={active ? 2.5 : 2}
+              />
+              <span
+                className={`text-[10px] font-medium leading-tight ${
+                  active ? "text-zoom-blue" : "text-muted"
+                }`}
+              >
+                {label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* Middle: Meetings */}
-      <Link
-        href={navItems[1].href}
-        className={`
-          relative flex w-9 items-center justify-center rounded-full p-1 transition-colors
-          ${navItems[1].active ? "bg-zoom-blue text-white" : "text-muted hover:bg-muted/10"}
-        `}
-        aria-label="Meetings"
-      >
-        <MeetingsIcon className="h-5 w-5" aria-hidden="true" />
-        <span className="absolute left-[calc(100%+8px)] -top-px whitespace-nowrap text-sm font-medium">
-          {navItems[1].label}
-        </span>
-      </Link>
+      {/* Spacer */}
+      <div className="flex-1" />
 
-      {/* Bottom spacer */}
-      <div className="mt-auto h-6" />
-
-      {/* Bottom: Settings */}
+      {/* Settings at bottom */}
       <Link
-        href={navItems[2].href}
-        className={`
-          relative flex w-9 items-center justify-center rounded-full p-1 transition-colors
-          ${navItems[2].active ? "bg-zoom-blue text-white" : "text-muted hover:bg-muted/10"}
-        `}
+        href={settingsItem.href}
+        className={`flex flex-col items-center gap-0.5 w-full py-2 px-1 rounded-xl transition-colors ${
+          settingsItem.match(pathname)
+            ? "text-zoom-blue"
+            : "text-muted hover:text-ink hover:bg-app"
+        }`}
         aria-label="Settings"
       >
-        <SettingsIcon className="h-5 w-5" aria-hidden="true" />
-        <span className="absolute left-[calc(100%+8px)] -top-px whitespace-nowrap text-sm font-medium">
-          {navItems[2].label}
+        <Settings
+          className={`h-6 w-6 ${
+            settingsItem.match(pathname) ? "text-zoom-blue" : "text-[#555]"
+          }`}
+          strokeWidth={2}
+        />
+        <span className="text-[10px] font-medium leading-tight text-muted">
+          Settings
         </span>
       </Link>
     </aside>

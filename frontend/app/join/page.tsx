@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { parseMeetingInput } from "@/lib/parseMeetingInput";
 import { getMeeting } from "@/lib/api";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Wordmark } from "@/components/Wordmark";
 
 export default function JoinPage() {
   const router = useRouter();
@@ -55,54 +51,108 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-ink">
-      {/* Top bar consistent with shared layout (spec §8.2 / D19) */}
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header — matches reference image 04: wordmark left, nav links right */}
       <header className="flex h-16 items-center justify-between border-b border-line bg-white px-6">
-        <Link href="/" className="flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded-md">
-          <Wordmark />
+        <Link
+          href="/"
+          aria-label="zoom-clone home"
+          className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue rounded"
+        >
+          {/* Zoom-style wordmark: bold blue 'zoom' */}
+          <span className="font-black lowercase tracking-tight text-zoom-blue text-2xl">
+            zoom
+          </span>
         </Link>
-        <nav className="flex items-center gap-3 sm:gap-6 text-sm font-medium text-ink flex-wrap">
-          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Support</a>
-          <Link href="/schedule" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Schedule</Link>
-          <Link href="/join" className="text-zoom-blue">Join</Link>
-          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Host</a>
-          <a href="#" className="hover:text-zoom-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue">Web App</a>
+        <nav className="flex items-center gap-5 text-sm font-medium text-ink">
+          <a href="#" className="hover:text-zoom-blue transition-colors">
+            Support
+          </a>
+          <Link href="/schedule" className="hover:text-zoom-blue transition-colors">
+            Schedule
+          </Link>
+          <Link href="/join" className="text-zoom-blue">
+            Join
+          </Link>
+          <a href="#" className="hover:text-zoom-blue transition-colors">
+            Host
+          </a>
+          <a href="#" className="hover:text-zoom-blue transition-colors">
+            Web App
+          </a>
         </nav>
       </header>
 
-      <main className="flex flex-col items-center px-6 pt-28 pb-12">
+      {/* Main — centered form matching reference image 04 */}
+      <main className="flex flex-1 flex-col items-center pt-24 px-6">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-black tracking-tight text-ink text-center mb-2">Join Meeting</h1>
-          <p className="text-sm text-muted text-center mb-8">Enter a Meeting ID or invite link.</p>
+          <h1 className="text-2xl font-bold text-ink text-center mb-8">
+            Join Meeting
+          </h1>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            <Input
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Label */}
+            <label
+              htmlFor="join-input"
+              className="block text-sm font-medium text-ink mb-1.5"
+            >
+              Meeting ID or Personal Link Name
+            </label>
+
+            {/* Input — blue border when focused, matching reference */}
+            <input
               id="join-input"
-              label="Meeting ID or Invite Link"
-              placeholder="Enter Meeting ID or Invite Link"
+              type="text"
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
                 if (error) setError(null);
               }}
-              error={error || undefined}
+              placeholder="Enter Meeting ID or Personal Link Name"
               autoComplete="off"
               autoFocus
+              className={`w-full h-11 px-3 rounded-lg border text-sm outline-none transition-all ${
+                error
+                  ? "border-danger focus:border-danger focus:ring-1 focus:ring-danger/30"
+                  : "border-zoom-blue focus:border-zoom-blue focus:ring-2 focus:ring-zoom-blue/20"
+              }`}
             />
-            <Button
+
+            {/* Inline error */}
+            {error && (
+              <p className="mt-2 text-xs text-danger" role="alert">
+                {error}
+              </p>
+            )}
+
+            {/* Join button — gray when disabled (no input), matching reference */}
+            <button
               type="submit"
               disabled={!canSubmit}
-              className="w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue"
-              aria-label="Join meeting"
+              className={`mt-3 w-full h-11 rounded-lg text-sm font-semibold transition-colors ${
+                canSubmit
+                  ? "bg-zoom-blue text-white hover:bg-zoom-blue-dark"
+                  : "bg-[#E4E7EC] text-[#98A2B3] cursor-not-allowed"
+              }`}
             >
-              <span>Join</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
+              {loading ? "Joining..." : "Join"}
+            </button>
           </form>
+
+          {/* Secondary link — matches reference */}
+          <div className="mt-8 text-center">
+            <a
+              href="#"
+              className="text-sm text-zoom-blue hover:underline"
+            >
+              Join a meeting from an H.323/SIP room system
+            </a>
+          </div>
         </div>
       </main>
 
-      <footer className="border-t border-line bg-app py-4 text-center text-xs text-muted">
+      {/* Footer — matches reference image 04 */}
+      <footer className="py-5 text-center text-xs text-muted border-t border-line">
         © 2026 zoom-clone (assignment project). All rights reserved.
       </footer>
     </div>

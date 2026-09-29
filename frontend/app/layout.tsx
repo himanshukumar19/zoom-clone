@@ -23,10 +23,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${lato.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans bg-white">
         <ToastProvider>
           <LayoutShell />
-          <div className="pt-16 pl-4 md:pl-14">{children}</div>
+          {/* pt-16: clear fixed TopNav height. md:pl-16: clear fixed IconRail width (w-16 = 64px) */}
+          <div className="pt-16 md:pl-16 min-h-screen">{children}</div>
         </ToastProvider>
       </body>
     </html>

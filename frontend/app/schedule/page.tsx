@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Copy, CalendarDays, Clock } from "lucide-react";
 import { scheduleMeeting } from "@/lib/api";
-import { PortalSidebar } from "@/components/schedule/PortalSidebar";
+// PortalSidebar removed — schedule page lives within the web client layout (TopNav + IconRail)
 
 function formatDisplayCode(code: string) {
   return code.replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
@@ -216,9 +216,7 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-app flex flex-col">
-      <div className="mx-auto max-w-4xl px-4 py-6 flex flex-col md:flex-row gap-8 flex-1">
-        <PortalSidebar />
-
+      <div className="mx-auto max-w-4xl px-4 py-6 flex-1">
         <main className="flex-1 min-w-0">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-zoom-blue hover:underline mb-2">
             <ArrowLeft className="h-4 w-4" />
