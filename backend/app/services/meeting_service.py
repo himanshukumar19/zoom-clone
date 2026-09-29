@@ -16,8 +16,6 @@ from app.schemas.meeting import (
     MeetingOut,
     MeetingWithParticipantOut,
     ParticipantOut,
-    ScheduleMeetingIn,
-    ScheduleMeetingOut,
 )
 from app.utils.meeting_code import generate_meeting_code
 
@@ -94,8 +92,8 @@ def _as_utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def scheduled_end(meeting: Meeting) -> datetime | None:
-    """Scheduled end instant, or None for instant meetings without a schedule."""
+def _scheduled_end(meeting: Meeting) -> datetime | None:
+    """Scheduled end = start + duration. None when the meeting has no schedule."""
     if meeting.scheduled_start is None or meeting.duration_minutes is None:
         return None
     return _as_utc(meeting.scheduled_start) + timedelta(
@@ -103,15 +101,19 @@ def scheduled_end(meeting: Meeting) -> datetime | None:
     )
 
 
-def is_recent(meeting: Meeting, now: datetime) -> bool:
-    """Recent = ended, or a scheduled meeting whose time has passed (D13)."""
+def _is_upcoming(meeting: Meeting, now: datetime) -> bool:
+    """D13: not ended AND not past its scheduled end (no end = upcoming)."""
+    if meeting.status == "ended":
+        return False
+    end = _scheduled_end(meeting)
+    return end is None or end > now
+
+
+def _is_recent(meeting: Meeting, now: datetime) -> bool:
+    """D13: ended, or a scheduled meeting whose end time has passed."""
     if meeting.status == "ended":
         return True
-    end = scheduled_end(meeting)
-    # Live meetings stay in Upcoming (with a Live badge) until they end,
-    # even if their scheduled slot passed while people are still inside.
-    if meeting.status == "live":
-        return False
+    end = _scheduled_end(meeting)
     return end is not None and end <= now
 
 
@@ -160,26 +162,6 @@ def schedule_meeting(
     db.commit()
     db.refresh(meeting)
     return MeetingOut.from_meeting(meeting)
-
-
-def list_meetings(db: Session, meeting_filter: str) -> list[MeetingOut]:
-    """Upcoming / recent lists for the dashboard (T-004, D13). Newest first."""
-    if meeting_filter not in ("upcoming", "recent"):
-        raise HTTPException(
-            status_code=422, detail="filter must be 'upcoming' or 'recent'."
-        )
-    now = _utcnow()
-    meetings = db.scalars(select(Meeting).order_by(Meeting.id.desc())).all()
-    if meeting_filter == "upcoming":
-        picked = [m for m in meetings if not is_recent(m, now)]
-    else:
-        picked = [m for m in meetings if is_recent(m, now)]
-    return [MeetingOut.from_meeting(m) for m in picked]
-
-
-def start_meeting(db: Session) -> MeetingWithParticipantOut:
-    """Placeholder — real start needs the meeting row; see start_by_code."""
-    raise NotImplementedError
 
 
 def start_by_code(db: Session, code: str) -> MeetingWithParticipantOut:
@@ -267,81 +249,6 @@ def join_by_code(
     )
     db.commit()
     return payload
-
-
-def _as_aware_utc(value: datetime) -> datetime:
-    """SQLite returns naive datetimes; treat those as UTC for comparisons."""
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
-
-
-def _scheduled_end(meeting: Meeting) -> datetime | None:
-    """Scheduled end = start + duration. None when the meeting has no schedule."""
-    if meeting.scheduled_start is None or meeting.duration_minutes is None:
-        return None
-    return _as_aware_utc(meeting.scheduled_start) + timedelta(
-        minutes=meeting.duration_minutes
-    )
-
-
-def _is_upcoming(meeting: Meeting, now: datetime) -> bool:
-    """D13: not ended AND not past its scheduled end (no end = upcoming)."""
-    if meeting.status == "ended":
-        return False
-    end = _scheduled_end(meeting)
-    return end is None or end > now
-
-
-def _is_recent(meeting: Meeting, now: datetime) -> bool:
-    """D13: ended, or a scheduled meeting whose end time has passed."""
-    if meeting.status == "ended":
-        return True
-    end = _scheduled_end(meeting)
-    return end is not None and end <= now
-
-
-def create_scheduled_meeting(
-    db: Session, payload: ScheduleMeetingIn
-) -> ScheduleMeetingOut:
-    """Schedule a future Meeting for the Default User (T-004).
-
-    Field lengths and positive duration are enforced by the schema (422);
-    the future-start rule lives here so the message names the problem.
-    """
-    host = get_default_user(db)
-    now = _utcnow()
-
-    start = _as_aware_utc(payload.scheduled_start)
-    if start <= now:
-        raise HTTPException(
-            status_code=422, detail="Scheduled start must be in the future."
-        )
-
-    # Schema strips the title; an all-whitespace description becomes None.
-    description = payload.description
-    if description is not None and not description.strip():
-        description = None
-
-    meeting = Meeting(
-        meeting_code=generate_meeting_code(db),
-        title=payload.title,
-        description=description,
-        host_id=host.id,
-        type="scheduled",
-        status="scheduled",
-        scheduled_start=start,
-        duration_minutes=payload.duration_minutes,
-        started_at=None,
-        ended_at=None,
-        created_at=now,
-    )
-    db.add(meeting)
-    db.flush()  # assigns meeting.id so the response can carry it
-
-    out = ScheduleMeetingOut(meeting=MeetingOut.from_meeting(meeting))
-    db.commit()
-    return out
 
 
 def list_meetings(
