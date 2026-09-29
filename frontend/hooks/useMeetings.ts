@@ -19,7 +19,10 @@ export function useMeetings(filter: MeetingListFilter = "upcoming") {
   }, [filter]);
 
   useEffect(() => {
-    fetchList();
+    async function load() {
+      await fetchList();
+    }
+    load();
   }, [fetchList]);
 
   // Refetch when tab regains focus (D11: no WebSockets / background polling)

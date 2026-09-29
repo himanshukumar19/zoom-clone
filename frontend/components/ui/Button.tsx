@@ -15,7 +15,7 @@ const variants: Record<Variant, string> = {
   ghost: "bg-transparent text-zoom-blue hover:bg-infobg disabled:text-[#98A2B3]",
 };
 
-type ButtonProps = React.HTMLAttributes<HTMLElement> & { variant?: Variant; as?: React.ElementType; [key: string]: any };
+type ButtonProps = React.HTMLAttributes<HTMLElement> & { variant?: Variant; as?: React.ElementType; [key: string]: unknown };
 export function Button({
   variant = "primary",
   className = "",

@@ -59,24 +59,28 @@ export default function RoomPage() {
   }, [codeNormalized]);
 
   useEffect(() => {
-    if (!codeNormalized) {
-      router.replace("/");
-      return;
+    async function load() {
+      if (!codeNormalized) {
+        router.replace("/");
+        return;
+      }
+      const pid = loadParticipantId(codeNormalized);
+      if (pid === null) {
+        router.replace(`/join/${codeNormalized}`);
+        return;
+      }
+      await fetchMeeting();
     }
-    const pid = loadParticipantId(codeNormalized);
-    if (pid === null) {
-      router.replace(`/join/${codeNormalized}`);
-      return;
-    }
-    fetchMeeting();
+    load();
   }, [codeNormalized, router, fetchMeeting]);
 
   // Start timer when meeting loads; reset on unmount.
   useEffect(() => {
     if (!meeting) return;
-    setElapsed(0);
+    const timeoutId = setTimeout(() => setElapsed(0), 0);
     timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => {
+      clearTimeout(timeoutId);
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [meeting?.id]);
@@ -86,8 +90,13 @@ export default function RoomPage() {
   // Poll participants every 5 seconds; detect removed self and stop on unmount.
   useEffect(() => {
     if (!meeting || !codeNormalized) return;
-    fetchParticipants();
-    const interval = setInterval(fetchParticipants, 5000);
+    async function load() {
+      await fetchParticipants();
+    }
+    load();
+    const interval = setInterval(() => {
+      fetchParticipants();
+    }, 5000);
     return () => clearInterval(interval);
   }, [meeting, codeNormalized, fetchParticipants]);
 

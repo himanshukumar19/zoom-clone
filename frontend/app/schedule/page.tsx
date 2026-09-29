@@ -32,12 +32,15 @@ export default function SchedulePage() {
 
   // Initialize date to tomorrow 9:30 AM
   useEffect(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const yyyy = tomorrow.getFullYear();
-    const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
-    const dd = String(tomorrow.getDate()).padStart(2, "0");
-    setDateStr(`${yyyy}-${mm}-${dd}`);
+    async function init() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const yyyy = tomorrow.getFullYear();
+      const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+      const dd = String(tomorrow.getDate()).padStart(2, "0");
+      setDateStr(`${yyyy}-${mm}-${dd}`);
+    }
+    init();
   }, []);
 
   // Pre-select title text on first focus
@@ -68,7 +71,8 @@ export default function SchedulePage() {
     // Past start check: combine date + time into local Date, compare to now
     if (dateStr && timeStr) {
       const [year, month, day] = dateStr.split("-").map(Number);
-      let [hour, minute] = timeStr.split(":").map(Number);
+      let hour = Number(timeStr.split(":")[0]);
+      const minute = Number(timeStr.split(":")[1]);
       if (amPm === "PM" && hour !== 12) hour += 12;
       if (amPm === "AM" && hour === 12) hour = 0;
       const startLocal = new Date(year, month - 1, day, hour, minute);
@@ -87,7 +91,8 @@ export default function SchedulePage() {
     try {
       // Build UTC instant from local picks
       const [year, month, day] = dateStr.split("-").map(Number);
-      let [hour, minute] = timeStr.split(":").map(Number);
+      let hour = Number(timeStr.split(":")[0]);
+      const minute = Number(timeStr.split(":")[1]);
       if (amPm === "PM" && hour !== 12) hour += 12;
       if (amPm === "AM" && hour === 12) hour = 0;
       const startLocal = new Date(year, month - 1, day, hour, minute);

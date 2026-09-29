@@ -53,7 +53,10 @@ export default function JoinNamePage() {
   }, [codeNormalized]);
 
   useEffect(() => {
-    if (codeNormalized) fetchMeeting();
+    async function load() {
+      if (codeNormalized) await fetchMeeting();
+    }
+    load();
   }, [codeNormalized, fetchMeeting]);
 
   const trimmedName = name.trim();
