@@ -1,7 +1,7 @@
 # zoom-clone — Video Conferencing Platform (Zoom Clone)
 
-> **Status: in progress — 2 of 27 tickets done (T-001, T-002).** Specs grill-locked, tickets published (`docs/tickets/`).
-> The backend skeleton runs today (`GET /api/health` → `{"status":"ok"}`) with models + auto-seed on empty DB; no endpoints or frontend yet.
+> **Status: in progress — 4 of 27 tickets done (T-001…T-004).** Specs grill-locked, tickets published (`docs/tickets/`).
+> The backend serves health, instant-create, schedule, and upcoming/recent list endpoints (tested: `pytest tests/` green) with models + auto-seed on empty DB; join/start/room routes and all frontend still to come.
 > Sections below are marked **[done]** or **[planned]** so you can tell what actually works. Deployed links TBD (T-024).
 
 Functional Zoom web-app clone: create, join, and schedule meetings with a clean Zoom-like interface. Built as a Scaler SDE Fullstack assignment (1-day timeline).
@@ -17,14 +17,14 @@ Functional Zoom web-app clone: create, join, and schedule meetings with a clean 
 
 ## Features
 
-Status per feature — the plan is the 4 core flows; only the backend foundation exists so far.
+Status per feature — backend endpoints through T-004 exist; all frontend still to come.
 
 | Feature | Status |
 |---|---|
 | Dashboard (clock, New / Join / Schedule tiles, Upcoming + Recent tabs) | planned (T-011…T-013) |
-| Instant Meeting (live room, 10-digit Meeting ID, Invite Link) | planned (T-003, T-014) |
+| Instant Meeting (live room, 10-digit Meeting ID, Invite Link) | backend **[done]** (T-003); flow UI planned (T-014) |
 | Join Meeting (by ID or link + Display Name, not-found/ended errors) | planned (T-005, T-015) |
-| Schedule Meeting (topic, description, date/time, duration → Upcoming) | planned (T-004, T-016) |
+| Schedule Meeting (topic, description, date/time, duration → Upcoming) | backend **[done]** (T-004); page UI planned (T-016) |
 | Meeting Room (initials tiles, roster polling, self-mute, invite, leave) | planned (T-017…T-019) |
 | Host mute-all / remove participant (bonus) | planned (T-007, T-020) |
 | Responsive mobile/tablet/desktop (bonus) | planned (T-022) |
@@ -32,6 +32,10 @@ Status per feature — the plan is the 4 core flows; only the backend foundation
 **[done] T-001 — backend scaffold:** env-driven settings, SQLAlchemy engine/session with `PRAGMA foreign_keys=ON`, CORS from `CORS_ORIGINS`, `GET /api/health`.
 
 **[done] T-002 — models + seed:** `users` / `meetings` / `participants` with CHECK constraints (type/status/duration), unique indexed meeting code, cascade delete to participants; startup `create_all` + seed (Demo User, 3 upcoming + 4 ended meetings, dates relative to now) that runs only when the users table is empty.
+
+**[done] T-003 — instant meeting:** `POST /api/meetings/instant` creates a `live` meeting titled `"Demo User's Meeting"` plus a host participant; 10-digit code (first non-zero, unique with retry), spaced display form, Invite Link computed from `FRONTEND_URL` (never stored). Covered by `backend/tests/test_instant_meeting.py` (5 tests).
+
+**[done] T-004 — schedule + list:** `POST /api/meetings` validates title ≤200 (trimmed, non-empty), description ≤2000, future `scheduled_start`, `duration_minutes` > 0 → 201 `{meeting}` or 422 with `detail`; `GET /api/meetings?filter=upcoming|recent` implements D13 (Upcoming = not ended and not past scheduled end; Recent = ended or past end; missed unstarted meetings count as Recent), newest-first by `created_at`.
 
 ## Repo layout
 
@@ -52,7 +56,8 @@ zoom-clone/
 │   │   ├── config.py           # env settings
 │   │   ├── database.py         # engine, session, FK pragma
 │   │   ├── models/             # [done — T-002] user.py, meeting.py, participant.py
-│   │   ├── schemas/ routers/ services/ utils/   # T-003 onward
+│   │   ├── schemas/ routers/ services/   # [done — T-003/T-004] instant, schedule, list
+│   │   ├── utils/              # [done — T-003] meeting_code.py (generate/format/invite link)
 │   │   └── seed.py             # [done — T-002] relative seed, runs when users empty
 │   ├── requirements.txt
 │   └── .env.example
@@ -98,10 +103,13 @@ Base path `/api`, errors as `{ "detail": "..." }` (see `docs/specs/00-backend-fo
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/health` | Liveness check (Render warmup / QA) |
+| POST | `/api/meetings/instant` | Create instant meeting + host participant → 201 `{meeting, participant}` (T-003) |
+| POST | `/api/meetings` | Schedule meeting `{title, description?, scheduled_start, duration_minutes}` → 201 `{meeting}`, 422 on invalid/past input (T-004) |
+| GET | `/api/meetings?filter=upcoming\|recent` | Dashboard lists per D13, newest first (T-004) |
 
-**[planned]** — contract fixed by spec 00, built in T-003…T-007:
+**[planned]** — contract fixed by spec 00, built in T-005…T-007:
 
-`GET /me`, `POST /meetings/instant`, `POST /meetings`, `GET /meetings?filter=upcoming|recent`, `GET /meetings/{code}`, `POST /meetings/{code}/start`, `POST /meetings/{code}/join`, `POST /meetings/{code}/leave`, `GET /meetings/{code}/participants`, `PATCH /meetings/{code}/participants/me`, `POST /meetings/{code}/mute-all`, `DELETE /meetings/{code}/participants/{id}`.
+`GET /me`, `GET /meetings/{code}`, `POST /meetings/{code}/start`, `POST /meetings/{code}/join`, `POST /meetings/{code}/leave`, `GET /meetings/{code}/participants`, `PATCH /meetings/{code}/participants/me`, `POST /meetings/{code}/mute-all`, `DELETE /meetings/{code}/participants/{id}`.
 
 Room actions take the caller's participant id via the `X-Participant-Id` header — see assumptions below.
 
@@ -170,7 +178,9 @@ erDiagram
 |---|---|---|
 | T-001 | Backend scaffold, config, DB session, CORS, health | done (`294d437`) |
 | T-002 | Models + schema + seed | done (`1f20bfe`) |
-| T-003…T-008 | Endpoints, host controls, backend tests | planned |
+| T-003 | Meeting code util + instant meeting endpoint | done (`2fc85a9`) |
+| T-004 | Schedule endpoint + upcoming/recent list | done (`8fd997d`) |
+| T-005…T-008 | Join/start, leave/participants, host controls, backend tests | planned |
 | T-009…T-027 | Frontend, flows, room, polish, deploy, README | planned |
 
 ## Deployment (TBD — T-024)
