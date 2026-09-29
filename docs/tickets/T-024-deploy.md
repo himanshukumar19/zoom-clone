@@ -2,7 +2,7 @@
 
 Priority: P0 — Depends on: T-013, T-014, T-015, T-016, T-019 (core flows complete)
 
-Status: ready-for-agent
+Status: done
 
 ## Context
 

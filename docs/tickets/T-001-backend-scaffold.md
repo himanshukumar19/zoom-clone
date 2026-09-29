@@ -2,7 +2,7 @@
 
 Priority: P0 — Depends on: none (frontier)
 
-Status: ready-for-agent
+Status: done
 
 ## Context
 

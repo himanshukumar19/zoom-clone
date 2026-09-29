@@ -2,7 +2,7 @@
 
 Priority: P1 — Depends on: T-013, T-015, T-016
 
-Status: ready-for-agent
+Status: done
 
 ## Context
 

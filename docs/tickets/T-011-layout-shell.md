@@ -2,7 +2,7 @@
 
 Priority: P0 — Depends on: T-009
 
-Status: ready-for-agent
+Status: done
 
 ## Context
 
@@ -29,3 +29,4 @@ Layout components, top bar, icon rail.
 ## Notes
 
 Settings/Meetings rail entries may be visual-only until their pages exist.
+Note: T-023 (/meetings P2 page) was originally dropped but the /meetings page now exists as a static placeholder using MeetingsCard (see T-011).

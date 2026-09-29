@@ -2,7 +2,7 @@
 
 Priority: P0 — Depends on: T-024
 
-Status: ready-for-agent
+Status: in-progress
 
 ## Context
 

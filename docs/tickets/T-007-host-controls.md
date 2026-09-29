@@ -2,7 +2,7 @@
 
 Priority: P2 — Depends on: T-006
 
-Status: ready-for-agent
+Status: done
 
 ## Context
 
