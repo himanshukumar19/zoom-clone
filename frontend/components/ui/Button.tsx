@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import type { ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
@@ -14,13 +15,15 @@ const variants: Record<Variant, string> = {
   ghost: "bg-transparent text-zoom-blue hover:bg-infobg disabled:text-[#98A2B3]",
 };
 
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; as?: React.ElementType };
 export function Button({
   variant = "primary",
   className = "",
+  as: Component = "button",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: ButtonProps) {
   return (
-    <button
+    <Component
       className={`inline-flex h-10 items-center justify-center rounded-lg px-5 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zoom-blue disabled:cursor-not-allowed ${variants[variant]} ${className}`}
       {...props}
     />
