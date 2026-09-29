@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* Design tokens (approx. from real Zoom screenshots, plan §8.0). */
+:root {
+  --zoom-blue: #0b5cff;
+  --zoom-blue-dark: #0a4fd9;
+  --zoom-orange: #ff6a1a;
+  --text: #232333;
+  --text-muted: #6e7085;
+  --border: #dde1e8;
+  --bg-app: #eef1f6;
+  --bg-sidebar: #f5f6fa;
+  --bg-nav-dark: #0b1329;
+  --info-bg: #eef5ff;
+  --danger: #e02828;
+  --room-bg: #1c1c1e;
+  --room-toolbar: #232326;
+  --radius: 8px;
+  --radius-tile: 18px;
+}
+
+/* Tailwind v4 theme: exposes classes like bg-zoom-blue, text-muted, border-line. */
+@theme {
+  --color-zoom-blue: #0b5cff;
+  --color-zoom-blue-dark: #0a4fd9;
+  --color-zoom-orange: #ff6a1a;
+  --color-ink: #232333;
+  --color-muted: #6e7085;
+  --color-line: #dde1e8;
+  --color-app: #eef1f6;
+  --color-sidebar: #f5f6fa;
+  --color-navdark: #0b1329;
+  --color-infobg: #eef5ff;
+  --color-danger: #e02828;
+  --color-room: #1c1c1e;
+  --color-toolbar: #232326;
+  --radius-tile: 18px;
+  --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  color: var(--text);
+  background: #fff;
+  font-family: var(--font-sans);
+}
