@@ -8,12 +8,24 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 
+from app.utils.meeting_code import generate_meeting_code
 from app.database import Base, SessionLocal, engine
 from app.models import Meeting, Participant, User  # noqa: F401 (register tables)
 
-# Fixed demo meeting codes: 10 digits, first non-zero, unique.
-UPCOMING_CODES = ["1000000001", "1000000002", "1000000003"]
-ENDED_CODES = ["2000000001", "2000000002", "2000000003", "2000000004"]
+# Upcoming scheduled meetings: tomorrow, +3 days, +7 days.
+UPCOMING_TITLES = [
+    ("Team Standup", "Daily sync with the team.", 30),
+    ("Design Review", "Walk through the new homepage mockups.", 60),
+    ("Sprint Planning", "Plan next sprint capacity and tickets.", 40),
+]
+
+# Ended meetings from the past week, each with guests.
+ENDED_DATA = [
+    ("Kickoff Call", "Project kickoff and introductions.", 1, 45, ["Alice", "Bob"]),
+    ("Demo Review", "Reviewed the prototype with stakeholders.", 2, 30, ["Carol"]),
+    ("Retro", "Sprint retrospective notes and action items.", 4, 60, ["Dave", "Erin", "Frank"]),
+    ("1:1 Check-in", "Quick weekly check-in.", 6, 20, ["Grace"]),
+]
 
 
 def _utcnow() -> datetime:
@@ -45,10 +57,10 @@ def seed_if_empty() -> bool:
             ("Design Review", "Walk through the new homepage mockups.", now + timedelta(days=3), 60),
             ("Sprint Planning", "Plan next sprint capacity and tickets.", now + timedelta(days=7), 40),
         ]
-        for code, (title, desc, start, duration) in zip(UPCOMING_CODES, upcoming):
+        for (title, desc, start, duration) in upcoming:
             db.add(
                 Meeting(
-                    meeting_code=code,
+                    meeting_code=generate_meeting_code(db),
                     title=title,
                     description=desc,
                     host_id=user.id,
@@ -64,17 +76,11 @@ def seed_if_empty() -> bool:
 
         # 4 ended meetings from the past week, each with a few participants
         # so Recent is populated on first boot.
-        ended = [
-            ("Kickoff Call", "Project kickoff and introductions.", 1, 45, ["Alice", "Bob"]),
-            ("Demo Review", "Reviewed the prototype with stakeholders.", 2, 30, ["Carol"]),
-            ("Retro", "Sprint retrospective notes and action items.", 4, 60, ["Dave", "Erin", "Frank"]),
-            ("1:1 Check-in", "Quick weekly check-in.", 6, 20, ["Grace"]),
-        ]
-        for code, (title, desc, days_ago, duration, guests) in zip(ENDED_CODES, ended):
+        for (title, desc, days_ago, duration, guests) in ENDED_DATA:
             start = now - timedelta(days=days_ago)
             end = start + timedelta(minutes=duration)
             meeting = Meeting(
-                meeting_code=code,
+                meeting_code=generate_meeting_code(db),
                 title=title,
                 description=desc,
                 host_id=user.id,
