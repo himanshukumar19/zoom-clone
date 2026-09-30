@@ -32,9 +32,10 @@ def on_startup() -> None:
     seed_if_empty()
 
 
-@app.get("/api/health")
-@app.get("/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
+    # No database access, no lazy-expiry logic.
     return {"status": "ok"}
 
 
